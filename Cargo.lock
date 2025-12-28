@@ -481,6 +481,8 @@ dependencies = [
  "clap",
  "dotenvy",
  "gemini-rust",
+ "serde",
+ "serde_json",
  "tempfile",
  "tokio",
 ]

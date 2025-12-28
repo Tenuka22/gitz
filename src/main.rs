@@ -17,7 +17,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         CliVarient::CommitMessage => {
             commit_message::handle_commit_message(cli.commit_scope).await?
         }
-        CliVarient::Readme => readme::handle_readme()?,
+        CliVarient::Readme => readme::handle_readme().await?,
     }
 
     Ok(())
