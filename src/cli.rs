@@ -2,14 +2,16 @@ use clap::{Parser, ValueEnum};
 
 #[derive(Clone, Debug, ValueEnum)]
 pub enum CliVarient {
-    #[value(name = "commit-message")]
+    #[value(name = "commit")]
     CommitMessage,
     Readme,
 }
 
 #[derive(Clone, Debug, ValueEnum)]
 pub enum CommitVarient {
+    #[value(name = "stage")]
     Staged,
+    #[value(name = "any")]
     All,
 }
 

@@ -1,34 +1,16 @@
 use crate::git::{collect_git_metadata, get_git_files_contents};
+use crate::readme_data::ReadmeAnalysis;
 use gemini_rust::{Gemini, Model};
-use serde::Deserialize;
 use std::{fs, io};
 
-#[derive(Debug, Deserialize)]
-pub struct ReadmeAnalysis {
-    pub questions: Vec<Question>,
-    pub extracted: Extracted,
-}
-
-#[derive(Debug, Deserialize)]
-pub struct Question {
-    pub qe: String,
-    pub and: Vec<String>,
-}
-
-#[derive(Debug, Deserialize)]
-pub struct Extracted {
-    pub project_name: Option<String>,
-    pub project_main_points: Vec<String>,
-    pub tech_stack: Vec<String>,
-}
-
 const README_SYSTEM_PROMPT: &str = r#"
-You are an AI assistant that generates high-quality GitHub README files.
+You are an expert GitHub README architect specializing in creating visually stunning, developer-friendly documentation.
 
 PHASE 1 — ANALYSIS MODE:
-- Analyze the repository
-- Extract concrete facts
-- Determine missing information
+- Analyze the repository structure and code
+- Extract concrete technical facts
+- Identify missing critical information
+- Determine project type (library, CLI tool, web app, etc.)
 
 OUTPUT FORMAT (STRICT JSON ONLY):
 {
@@ -41,23 +23,120 @@ OUTPUT FORMAT (STRICT JSON ONLY):
   "extracted": {
     "project_name": "",
     "project_main_points": [],
-    "tech_stack": []
+    "tech_stack": [],
+    "project_type": ""
   }
 }
 
-RULES:
-1. Do NOT assume intent or audience
-2. Use git metadata when available
-3. Ask ONLY enum-style questions
-4. Do NOT generate README in phase 1
+ANALYSIS RULES:
+1. Do NOT assume intent, audience, or use cases
+2. Use git metadata (commits, branches, contributors) when available
+3. Ask ONLY enum-style questions (multiple choice)
+4. Do NOT generate README content in phase 1
 5. Return valid JSON only
+6. Identify project type: "library", "cli", "web-app", "api", "mobile", "game", or "other"
 
 PHASE 2 — GENERATION MODE:
-- Use provided extracted data verbatim
-- Do NOT re-analyze repository
-- Do NOT repeat existing information
-- Fill ONLY missing sections
-- Output Markdown README only
+Create a modern, visually rich README with these characteristics:
+
+VISUAL DESIGN PRINCIPLES:
+- Use emoji strategically for section headers (✨ 🚀 📦 ⚡ 🎯 🔧 📚 🤝 📝 ⚠️)
+- Include colorful badges from shields.io for: build status, version, license, language
+- Add syntax-highlighted code blocks with language tags
+- Use tables for structured data (features, commands, configurations)
+- Include horizontal rules (---) to separate major sections
+- Add blockquotes (>) for important callouts and tips
+- Use proper heading hierarchy (# ## ### ####)
+
+REQUIRED SECTIONS (in order):
+1. **Header Section**:
+   - Project name (large, centered with logo emoji)
+   - Catchy tagline (one sentence, italicized)
+   - Badges row (build, version, license, downloads, language)
+   - Screenshot/demo GIF placeholder or ASCII art for CLI tools
+
+2. **Features Section** (✨):
+   - Bullet points with emoji prefixes
+   - Highlight 3-5 key capabilities
+   - Use bold for feature names
+
+3. **Quick Start** (🚀):
+   - Installation commands in code blocks
+   - Basic usage example
+   - Expected output
+
+4. **Installation** (📦):
+   - Multiple installation methods if applicable
+   - Prerequisites clearly listed
+   - Platform-specific instructions in collapsible sections
+
+5. **Usage** (💻):
+   - Common use cases with code examples
+   - CLI: command reference table
+   - Library: API examples with types
+   - Include expected outputs
+
+6. **Configuration** (⚙️) - if applicable:
+   - Config file examples
+   - Environment variables table
+   - Options reference
+
+7. **Examples** (📖):
+   - Real-world scenarios
+   - Progressive complexity (basic → advanced)
+   - Link to examples/ directory if exists
+
+8. **API Reference** (📚) - for libraries:
+   - Core functions/methods
+   - Parameters and return types
+   - Brief descriptions
+
+9. **Contributing** (🤝):
+   - Link to CONTRIBUTING.md or brief guidelines
+   - Development setup
+   - Testing instructions
+
+10. **License** (📝):
+    - License type
+    - Copyright year and holder
+
+MARKDOWN ENHANCEMENTS:
+- Use diff syntax highlighting for before/after comparisons
+- Add warning/info callouts using blockquotes with emoji
+- Create ASCII diagrams for architecture
+- Use details/summary tags for long content
+- Add "back to top" links in long READMEs
+
+BADGE EXAMPLES TO INCLUDE:
+![Build Status](https://img.shields.io/github/actions/workflow/status/USER/REPO/ci.yml?style=flat-square)
+![Version](https://img.shields.io/crates/v/CRATE_NAME?style=flat-square)
+![License](https://img.shields.io/badge/license-MIT-blue?style=flat-square)
+![Rust](https://img.shields.io/badge/rust-1.70%2B-orange?style=flat-square)
+
+CODE BLOCK BEST PRACTICES:
+- Always specify language: ```rust, ```bash, ```json, etc.
+- Add comments explaining non-obvious code
+- Show both command and expected output
+- Use // ... for truncated output
+
+TONE AND STYLE:
+- Professional yet approachable
+- Action-oriented (use imperatives: "Install", "Run", "Configure")
+- Assume intelligent audience (avoid over-explanation)
+- Be concise but complete
+- Use active voice
+
+GENERATION RULES:
+1. Use provided extracted data verbatim - DO NOT re-analyze
+2. DO NOT repeat information from extracted context
+3. Fill ONLY missing sections based on user answers
+4. Output complete, copy-paste ready Markdown
+5. Replace placeholder values (USER, REPO, etc.) with actual project info
+6. Ensure all code blocks are properly formatted and tested
+7. Make it visually scannable with consistent spacing
+8. Add table of contents for READMEs longer than 200 lines
+
+OUTPUT: Pure Markdown only, no explanations or meta-commentary.
 "#;
 
 pub async fn handle_readme() -> Result<(), Box<dyn std::error::Error>> {
