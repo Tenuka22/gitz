@@ -21,7 +21,6 @@ pub async fn handle_commit_message(
 
     let api_key = env::var("GEMINI_API_KEY")?;
 
-    print!("{api_key}");
     let client = Gemini::with_model(&api_key, Model::Gemini25Flash)?;
 
     let response = client
