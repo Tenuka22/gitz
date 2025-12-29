@@ -11,15 +11,17 @@ pub async fn handle_commit_message(
 ) -> Result<(), Box<dyn std::error::Error>> {
     let mut temp = NamedTempFile::new()?;
 
-    if let Some(diff) = git::get_git_diff(commit_scope)? {
-        write!(temp, "{}", diff)?;
-    }
+    let diff = git::get_git_diff(commit_scope)?.ok_or("No diff found")?;
+
+    write!(temp, "{}", diff)?;
 
     let contents = std::fs::read_to_string(temp.path())?;
+
     let filtered_contents = content_filter::filter_diff(&contents);
 
-    let api_key = env::var("GEMINI_API_KEY").expect("GEMINI_API_KEY environment variable not set");
+    let api_key = env::var("GEMINI_API_KEY")?;
 
+    print!("{api_key}");
     let client = Gemini::with_model(&api_key, Model::Gemini25Flash)?;
 
     let response = client
@@ -59,7 +61,7 @@ pub async fn handle_commit_message(
         .execute()
         .await?;
 
-    println!("{} ", response.text());
+    log::info!("Commti message done \n{}", response.text());
 
     Ok(())
 }

@@ -4,22 +4,61 @@ mod content_filter;
 mod git;
 mod readme;
 mod readme_data;
-use dotenvy::dotenv;
+use colored::*;
 
 use clap::Parser;
 use cli::{Cli, CliVarient};
+use dotenvy::dotenv_override;
+use log::{error, info};
+use std::io::Write;
 
 #[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    dotenv().ok();
+async fn main() {
+    init_logger();
+    dotenv_override().ok();
+
     let cli = Cli::parse();
-    // Must call like gtiz.exe commit stage | gtiz.exe commit any | gitz.exe readme
+
+    if let Err(e) = run(cli).await {
+        error!("Application error: {}", e);
+        std::process::exit(1);
+    }
+}
+
+fn init_logger() {
+    env_logger::Builder::new()
+        .format(|buf, record| {
+            let level = match record.level() {
+                log::Level::Error => "ERROR".red().bold(),
+                log::Level::Warn => "WARN ".yellow().bold(),
+                log::Level::Info => "INFO ".green().bold(),
+                log::Level::Debug => "DEBUG".blue().bold(),
+                log::Level::Trace => "TRACE".purple().bold(),
+            };
+            writeln!(
+                buf,
+                "{} {} {} {}",
+                "====".bright_black(),
+                level,
+                "==== \n".bright_black(),
+                record.args().to_string().bright_blue()
+            )
+        })
+        .filter_level(log::LevelFilter::Info)
+        .parse_default_env()
+        .init();
+}
+
+async fn run(cli: Cli) -> Result<(), Box<dyn std::error::Error>> {
     match cli.varient {
         CliVarient::CommitMessage => {
-            commit_message::handle_commit_message(cli.commit_scope).await?
+            info!("Generating commit message...");
+            commit_message::handle_commit_message(cli.commit_scope).await?;
         }
-        CliVarient::Readme => readme::handle_readme().await?,
+        CliVarient::Readme => {
+            info!("Generating README...");
+            readme::handle_readme().await?;
+        }
     }
-
     Ok(())
 }

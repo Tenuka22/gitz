@@ -140,9 +140,7 @@ OUTPUT: Pure Markdown only, no explanations or meta-commentary.
 "#;
 
 pub async fn handle_readme() -> Result<(), Box<dyn std::error::Error>> {
-    let Some(file_contents) = get_git_files_contents()? else {
-        return Err("No git files found".into());
-    };
+    let file_contents = get_git_files_contents()?.ok_or("Failed to extract the values")?;
 
     let git_context = collect_git_metadata();
 
@@ -167,21 +165,21 @@ pub async fn handle_readme() -> Result<(), Box<dyn std::error::Error>> {
     if json_str.ends_with("```") {
         json_str = json_str.strip_suffix("```").unwrap();
     }
+
     json_str = json_str.trim();
 
-    let analysis: ReadmeAnalysis = serde_json::from_str(json_str)
-        .map_err(|e| format!("Invalid analysis JSON: {e}\n{analysis_text}"))?;
+    let analysis: ReadmeAnalysis =
+        serde_json::from_str(json_str).map_err(|e| format!("Invalid analysis JSON: {e}\n"))?;
 
-    println!("\n=== README QUESTIONS ===\n");
+    log::info!("\n=== README QUESTIONS ===\n");
     for (i, q) in analysis.questions.iter().enumerate() {
-        println!("{}. {}", i + 1, q.qe);
+        log::info!("{}. {}", i + 1, q.qe);
         for opt in &q.and {
-            println!("   {}", opt);
+            log::info!("   {}", opt);
         }
-        println!();
     }
 
-    println!("Enter answers (one per space):");
+    log::info!("Enter answers (one per space):");
     let mut answers_raw = String::new();
     io::stdin().read_line(&mut answers_raw)?;
 
@@ -221,5 +219,7 @@ INSTRUCTIONS:
     let file_path = "README.md";
 
     fs::write(file_path, readme_response.text())?;
+    log::info!("Readme successfully added.");
+
     Ok(())
 }

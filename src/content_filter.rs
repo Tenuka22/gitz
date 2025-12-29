@@ -24,6 +24,7 @@ fn is_ignorable_file(file_path: &str) -> bool {
 /// 3.  **Truncates long diffs**: If the total size exceeds `MAX_CONTEXT_LENGTH`,
 ///     it truncates the diff and appends a notice.
 pub fn filter_diff(diff: &str) -> String {
+    log::info!("Filtering a {} length of a diff.", diff.len());
     let mut filtered_parts = Vec::new();
     let mut changed_files_summary = Vec::new();
 
@@ -68,6 +69,12 @@ pub fn filter_diff(diff: &str) -> String {
         }
         indexed_diff.push_str("\n... (diff truncated)");
     }
+
+    log::info!(
+        "Filtering the full {} diff is done and the new diff contain only {} length.",
+        diff.len(),
+        indexed_diff.len()
+    );
 
     indexed_diff
 }
