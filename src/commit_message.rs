@@ -3,21 +3,13 @@ use crate::content_filter;
 use crate::git;
 use gemini_rust::{Gemini, Model};
 use std::env;
-use std::io::Write;
-use tempfile::NamedTempFile;
 
 pub async fn handle_commit_message(
     commit_scope: Option<CommitVarient>,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    let mut temp = NamedTempFile::new()?;
-
     let diff = git::get_git_diff(commit_scope)?.ok_or("No diff found")?;
 
-    write!(temp, "{}", diff)?;
-
-    let contents = std::fs::read_to_string(temp.path())?;
-
-    let filtered_contents = content_filter::filter_diff(&contents);
+    let filtered_contents = content_filter::filter_diff(&diff);
 
     let api_key = env::var("GEMINI_API_KEY")?;
 

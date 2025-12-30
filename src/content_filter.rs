@@ -29,16 +29,19 @@ fn is_ignorable_file(file_path: &str) -> bool {
 ///     it truncates the diff and appends a notice.
 pub fn filter_diff(diff: &str) -> String {
     log::info!("Filtering a {} length of a diff.", diff.len());
-    let mut filtered_parts = Vec::new();
+    let mut priority_parts = Vec::new();
+    let mut other_parts = Vec::new();
     let mut changed_files_summary = Vec::new();
 
     for part in diff.split("diff --git ").skip(1) {
+        let mut file_processed = false;
         if let Some(first_line) = part.lines().next() {
             if let Some(file_path_a) = first_line.split_whitespace().next() {
                 let file_name = file_path_a.strip_prefix("a/").unwrap_or(file_path_a);
                 if is_ignorable_file(file_name) {
-                    continue;
+                    continue; // Skip ignorable files completely
                 }
+                file_processed = true;
 
                 let status = match part {
                     _ if part.contains("new file mode ") => "added",
@@ -46,12 +49,21 @@ pub fn filter_diff(diff: &str) -> String {
                     _ => "modified",
                 };
                 changed_files_summary.push(format!("- {} ({})", file_name, status));
+
+                if is_priority_file(file_name) {
+                    priority_parts.push(format!("diff --git {}", part));
+                } else {
+                    other_parts.push(format!("diff --git {}", part));
+                }
             }
         }
-        filtered_parts.push(format!("diff --git {}", part));
+        if !file_processed {
+            // This case handles parts of the diff that might not be associated with a specific file change.
+            other_parts.push(format!("diff --git {}", part));
+        }
     }
 
-    if filtered_parts.is_empty() && !diff.is_empty() {
+    if priority_parts.is_empty() && other_parts.is_empty() && !diff.is_empty() {
         return "Filtered out diff contents. Likely only lockfiles or ignored files were changed."
             .to_string();
     }
@@ -59,11 +71,13 @@ pub fn filter_diff(diff: &str) -> String {
     let mut indexed_diff = String::new();
     if !changed_files_summary.is_empty() {
         indexed_diff.push_str("An index of the changed files:\n");
+        changed_files_summary.sort();
         indexed_diff.push_str(&changed_files_summary.join("\n"));
-        indexed_diff.push_str("\n\nFull diff for each file:\n");
+        indexed_diff.push_str("\n\nFull diff for each file (priority files first):\n");
     }
 
-    indexed_diff.push_str(&filtered_parts.join("\n"));
+    priority_parts.append(&mut other_parts);
+    indexed_diff.push_str(&priority_parts.join("\n"));
 
     if indexed_diff.len() > MAX_CONTEXT_LENGTH {
         if let Some(last_newline) = indexed_diff[..MAX_CONTEXT_LENGTH].rfind('\n') {
