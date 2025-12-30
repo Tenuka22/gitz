@@ -1,16 +1,13 @@
-mod commit_message;
-mod content_filter;
 mod handlers;
 mod models;
-mod readme;
-mod readme_data;
+
 use colored::*;
 
-use clap::Parser;
 use crate::models::cli::{Cli, CliVarient};
+use crate::models::error::APIError;
+use clap::Parser;
 use dotenvy::dotenv_override;
 use log::{error, info};
-use crate::models::error::APIError;
 use std::io::Write;
 
 #[tokio::main]
@@ -54,14 +51,12 @@ async fn run(cli: Cli) -> Result<(), APIError> {
     match cli.varient {
         CliVarient::CommitMessage => {
             info!("Generating commit message...");
-            crate::commit_message::handle_commit_message(cli.commit_scope).await?;
+            crate::handlers::commit::message::handle_commit_message(cli.commit_scope).await?;
         }
         CliVarient::Readme => {
             info!("Generating README...");
-            crate::readme::handle_readme().await?;
+            crate::handlers::readme::handle_readme().await?;
         }
     }
     Ok(())
 }
-
-

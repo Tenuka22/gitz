@@ -1,5 +1,5 @@
 use crate::{
-    content_filter, handlers,
+    handlers::{self, commit::filter},
     models::{self, error::APIError},
 };
 use gemini_rust::{Gemini, Model};
@@ -11,7 +11,7 @@ pub async fn handle_commit_message(
     let diff = handlers::commit::diff::get_git_diff(commit_scope)?
         .ok_or_else(|| APIError::new_msg("Diff extraction", "No diff found"))?;
 
-    let filtered_contents = content_filter::filter_diff(&diff);
+    let filtered_contents = filter::filter_diff(&diff);
 
     let api_key =
         env::var("GEMINI_API_KEY").map_err(|e| APIError::new("GEMINI_API_KEY not found", e))?;

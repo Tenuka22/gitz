@@ -1,9 +1,10 @@
+mod filter;
+
 use crate::{
-    content_filter::filter_and_process_readme_files,
     handlers::git::{collect_git_metadata, get_git_files},
-    models::error::APIError,
-    readme_data::ReadmeAnalysis,
+    models::{error::APIError, readme::ReadmeAnalysis},
 };
+use filter::filter_and_process_readme_files;
 use gemini_rust::{Gemini, Model};
 use std::{env, fs, io};
 
