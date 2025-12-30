@@ -1,9 +1,4 @@
-//! # Content Filter
-//!
-//! This module provides functions for filtering and sanitizing content,
-//! primarily aimed at reducing the token count and improving the quality of
-//! context provided to the Gemini model.
-
+use crate::models::error::APIError;
 use std::collections::BTreeMap;
 use std::fs;
 use std::path::Path;
@@ -176,9 +171,7 @@ fn generate_tree_view(files: &[&str]) -> String {
     tree
 }
 
-pub fn filter_and_process_readme_files(
-    files: Vec<&str>,
-) -> Result<String, Box<dyn std::error::Error>> {
+pub fn filter_and_process_readme_files(files: Vec<&str>) -> Result<String, APIError> {
     let mut content = String::new();
     let mut total_len = 0;
 
@@ -206,17 +199,20 @@ pub fn filter_and_process_readme_files(
 
     content.push_str("Key file contents:\n");
 
-    let process_files = |file_paths: Vec<&str>,
-                         content: &mut String,
-                         total_len: &mut usize|
-     -> Result<(), Box<dyn std::error::Error>> {
-        let mut sorted_paths = file_paths;
-        sorted_paths.sort();
-        for file_path in sorted_paths {
-            if *total_len > MAX_TOTAL_CONTENT_LENGTH {
-                break;
-            }
-            if let Ok(mut file_content) = fs::read_to_string(file_path) {
+    let process_files =
+        |file_paths: Vec<&str>,
+         content: &mut String,
+         total_len: &mut usize|
+         -> Result<(), APIError> {
+            let mut sorted_paths = file_paths;
+            sorted_paths.sort();
+            for file_path in sorted_paths {
+                if *total_len > MAX_TOTAL_CONTENT_LENGTH {
+                    break;
+                }
+                let mut file_content = fs::read_to_string(file_path)
+                    .map_err(|e| APIError::new("fs::read_to_string", e))?;
+
                 content.push_str(&format!("--- File: {} ---\n", file_path));
                 if file_content.len() > MAX_FILE_CONTENT_LENGTH {
                     file_content.truncate(MAX_FILE_CONTENT_LENGTH);
@@ -226,9 +222,8 @@ pub fn filter_and_process_readme_files(
                 content.push_str(&file_content);
                 content.push_str("\n\n");
             }
-        }
-        Ok(())
-    };
+            Ok(())
+        };
 
     process_files(priority_files.clone(), &mut content, &mut total_len)?;
     process_files(interesting_files.clone(), &mut content, &mut total_len)?;
@@ -248,3 +243,4 @@ pub fn filter_and_process_readme_files(
 
     Ok(content)
 }
+

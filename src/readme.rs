@@ -1,8 +1,11 @@
-use crate::content_filter::filter_and_process_readme_files;
-use crate::git::{collect_git_metadata, get_git_files};
-use crate::readme_data::ReadmeAnalysis;
+use crate::{
+    content_filter::filter_and_process_readme_files,
+    handlers::git::{collect_git_metadata, get_git_files},
+    models::error::APIError,
+    readme_data::ReadmeAnalysis,
+};
 use gemini_rust::{Gemini, Model};
-use std::{fs, io};
+use std::{env, fs, io};
 
 const README_SYSTEM_PROMPT: &str = r#"
 You are an expert GitHub README architect specializing in creating visually stunning, developer-friendly documentation.
@@ -140,14 +143,18 @@ GENERATION RULES:
 OUTPUT: Pure Markdown only, no explanations or meta-commentary.
 "#;
 
-pub async fn handle_readme() -> Result<(), Box<dyn std::error::Error>> {
-    let files = get_git_files()?.ok_or("Failed to get git files")?;
-    let file_contents = filter_and_process_readme_files(files.iter().map(AsRef::as_ref).collect())?;
+pub async fn handle_readme() -> Result<(), APIError> {
+    let files = get_git_files()?
+        .ok_or_else(|| APIError::new_msg("README", "Failed to get git files"))?;
+    let file_contents =
+        filter_and_process_readme_files(files.iter().map(AsRef::as_ref).collect())?;
 
     let git_context = collect_git_metadata();
 
-    let api_key = std::env::var("GEMINI_API_KEY")?;
-    let client = Gemini::with_model(api_key, Model::Gemini25Flash)?;
+    let api_key =
+        env::var("GEMINI_API_KEY").map_err(|e| APIError::new("GEMINI_API_KEY not found", e))?;
+    let client =
+        Gemini::with_model(api_key, Model::Gemini25Flash).map_err(|e| APIError::new("Gemini", e))?;
 
     let analysis_response = client
         .generate_content()
@@ -156,7 +163,8 @@ pub async fn handle_readme() -> Result<(), Box<dyn std::error::Error>> {
         .with_user_message(&git_context)
         .with_user_message("Analyze this repository and return missing README information.")
         .execute()
-        .await?;
+        .await
+        .map_err(|e| APIError::new("Gemini", e))?;
 
     let analysis_text = analysis_response.text();
 
@@ -170,8 +178,8 @@ pub async fn handle_readme() -> Result<(), Box<dyn std::error::Error>> {
 
     json_str = json_str.trim();
 
-    let analysis: ReadmeAnalysis =
-        serde_json::from_str(json_str).map_err(|e| format!("Invalid analysis JSON: {e}\n"))?;
+    let analysis: ReadmeAnalysis = serde_json::from_str(json_str)
+        .map_err(|e| APIError::new("Invalid analysis JSON", e))?;
 
     log::info!("\n=== README QUESTIONS ===\n");
 
@@ -187,7 +195,9 @@ pub async fn handle_readme() -> Result<(), Box<dyn std::error::Error>> {
 
     log::info!("Enter answers (one per space):");
     let mut answers_raw = String::new();
-    io::stdin().read_line(&mut answers_raw)?;
+    io::stdin()
+        .read_line(&mut answers_raw)
+        .map_err(|e| APIError::new("STDIN", e))?;
 
     let readme_response = client
         .generate_content()
@@ -220,11 +230,12 @@ INSTRUCTIONS:
             answers_raw
         ))
         .execute()
-        .await?;
+        .await
+        .map_err(|e| APIError::new("Gemini", e))?;
 
     let file_path = "README.md";
 
-    fs::write(file_path, readme_response.text())?;
+    fs::write(file_path, readme_response.text()).map_err(|e| APIError::new("fs::write", e))?;
     log::info!("Readme successfully added.");
 
     Ok(())

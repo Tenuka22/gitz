@@ -4,6 +4,7 @@ use clap::{Parser, ValueEnum};
 pub enum CliVarient {
     #[value(name = "commit")]
     CommitMessage,
+    #[value(name = "readme")]
     Readme,
 }
 
@@ -12,7 +13,7 @@ pub enum CommitVarient {
     #[value(name = "stage")]
     Staged,
     #[value(name = "any")]
-    All,
+    Any,
 }
 
 #[derive(Parser, Debug)]
