@@ -35,12 +35,12 @@ fn init_logger() {
                 log::Level::Debug => "DEBUG".blue().bold(),
                 log::Level::Trace => "TRACE".purple().bold(),
             };
+
             writeln!(
                 buf,
-                "{} {} {} {}",
+                "{} {} {}",
                 "====".bright_black(),
                 level,
-                "==== \n".bright_black(),
                 record.args().to_string().bright_blue()
             )
         })

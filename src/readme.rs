@@ -1,4 +1,5 @@
-use crate::git::{collect_git_metadata, get_git_files_contents};
+use crate::content_filter::filter_and_process_readme_files;
+use crate::git::{collect_git_metadata, get_git_files};
 use crate::readme_data::ReadmeAnalysis;
 use gemini_rust::{Gemini, Model};
 use std::{fs, io};
@@ -140,7 +141,8 @@ OUTPUT: Pure Markdown only, no explanations or meta-commentary.
 "#;
 
 pub async fn handle_readme() -> Result<(), Box<dyn std::error::Error>> {
-    let file_contents = get_git_files_contents()?.ok_or("Failed to extract the values")?;
+    let files = get_git_files()?.ok_or("Failed to get git files")?;
+    let file_contents = filter_and_process_readme_files(files.iter().map(AsRef::as_ref).collect())?;
 
     let git_context = collect_git_metadata();
 
@@ -172,11 +174,15 @@ pub async fn handle_readme() -> Result<(), Box<dyn std::error::Error>> {
         serde_json::from_str(json_str).map_err(|e| format!("Invalid analysis JSON: {e}\n"))?;
 
     log::info!("\n=== README QUESTIONS ===\n");
+
     for (i, q) in analysis.questions.iter().enumerate() {
         log::info!("{}. {}", i + 1, q.qe);
+
         for opt in &q.and {
             log::info!("   {}", opt);
         }
+
+        log::info!("");
     }
 
     log::info!("Enter answers (one per space):");
