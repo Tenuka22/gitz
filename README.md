@@ -1,126 +1,99 @@
-# gitz
+# ✨ gitz ✨
 
-<p align="center">
-  <img src="https://raw.githubusercontent.com/rust-lang/rust/master/src/doc/rust-logo.svg" alt="gitz Logo" width="120" />
-</p>
+*Effortlessly generate AI-powered Git commit messages and READMEs from your diffs.*
 
-<h1 align="center">✨ gitz ✨</h1>
+[![Build Status](https://img.shields.io/github/actions/workflow/status/YOUR_GITHUB_USER/gitz/ci.yml?style=flat-square)](https://github.com/YOUR_GITHUB_USER/gitz/actions)
+[![Crates.io Version](https://img.shields.io/crates/v/gitz?style=flat-square)](https://crates.io/crates/gitz)
+[![License](https://img.shields.io/badge/license-MIT-blue?style=flat-square)](LICENSE)
+[![Rust](https://img.shields.io/badge/rust-1.70%2B-orange?style=flat-square)](https://www.rust-lang.org)
 
-<p align="center">
-  <i>Supercharge your Git workflow with AI-powered commit messages and instant README generation.</i>
-</p>
+```bash
+$ gitz commit
+✨ Generating commit message for staged changes...
 
-<p align="center">
-  <a href="https://github.com/USER/REPO/actions/workflows/ci.yml">
-    <img src="https://img.shields.io/github/actions/workflow/status/USER/REPO/ci.yml?branch=main&style=flat-square&label=build" alt="Build Status">
-  </a>
-  <a href="https://crates.io/crates/gitz">
-    <img src="https://img.shields.io/crates/v/gitz?style=flat-square&color=blue" alt="Crates.io Version">
-  </a>
-  <a href="https://github.com/USER/REPO/blob/main/LICENSE">
-    <img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="License: MIT">
-  </a>
-  <img src="https://img.shields.io/badge/rust-1.70%2B-orange?style=flat-square" alt="Rust Version">
-</p>
-
+[main d1e7f2b] feat: Implement AI-powered commit message generation
+ 1 file changed, 10 insertions(+)
 ```
-    ____ _     _   _ ____  
-   / ___| |_ _| |_| |___ \ 
-  | |  _| __| '_| | | __) |
-  | |_| | |_| | | | |/ ___/ 
-   \____|\__|_| |_|_|_____|
-                           
-```
+---
+
+## 🎯 Table of Contents
+
+- [✨ Features](#-features)
+- [🚀 Quick Start](#-quick-start)
+- [📦 Installation](#-installation)
+- [💻 Usage](#-usage)
+  - [`gitz commit`](#-gitz-commit)
+  - [`gitz readme`](#-gitz-readme)
+  - [CLI Commands](#-cli-commands)
+- [⚙️ Configuration](#️-configuration)
+- [📖 Examples](#-examples)
+- [🤝 Contributing](#-contributing)
+- [📝 License](#-license)
 
 ---
 
 ## ✨ Features
 
-`gitz` brings AI capabilities directly into your Git workflow, streamlining two crucial aspects of repository management:
-
-*   **AI-Powered Commit Messages**: Automatically generate conventional Git commit messages from your codebase diffs. It supports analyzing either staged changes or all changes (staged and unstaged) to provide relevant and structured suggestions.
-*   **GitHub README Generation**: Instantly create comprehensive `README.md` files for your repositories by analyzing their existing content and structure.
-*   **Intelligent Diff Filtering**: Filters and optimizes Git diff content to ensure it fits within AI model token limits and maintains relevance for accurate AI processing.
-*   **Seamless Git Integration**: Seamlessly integrates with underlying Git commands to efficiently retrieve necessary diffs and repository file contents for its operations.
+- **AI-powered Commit Messages**: Automatically craft descriptive Git commit messages based on your staged or unstaged changes.
+- **Intelligent Diff Filtering**: Prioritizes and filters Git diff content to provide the most relevant context for AI processing.
+- **Gemini AI Integration**: Seamlessly leverages the Gemini AI API for robust content generation.
+- **README Generation**: Generate initial `README.md` files for your projects based on the current repository context.
+- **Flexible Scope**: Supports processing both **staged and unstaged changes** using the `--all` flag.
+- **Direct Git Integration**: By default, `gitz commit` writes the generated message directly into your Git commit.
 
 ---
 
 ## 🚀 Quick Start
 
-Get `gitz` up and running in a flash!
+Get up and running with `gitz` in no time!
 
 1.  **Install `gitz`**:
-
     ```bash
     cargo install gitz
     ```
 
-2.  **Set your AI API Key**:
-    `gitz` uses the Google Gemini API. Obtain an API key from [Google AI Studio](https://makersuite.google.com/app/apikey) and set it as an environment variable:
-
+2.  **Set your Gemini API Key**:
     ```bash
-    export GEMINI_API_KEY="YOUR_GEMINI_API_KEY_HERE"
+    export GEMINI_API_KEY="YOUR_GEMINI_API_KEY"
     ```
+    > ⚠️ You can obtain your API key from the [Google AI Studio](https://makersuite.google.com/app/apikey).
 
-3.  **Generate a Commit Message**:
-    Make some changes, stage them (`git add .`), then run:
-
+3.  **Generate a commit message**:
+    Stage your changes as usual, then run:
     ```bash
     git add .
-    gitz commit -s
+    gitz commit
     ```
-
-    _Expected Output:_
-    ```
-    ? Use this commit message? (y/N)
-    feat: Add initial AI-powered commit message generation feature
-
-    This commit introduces the core functionality for gitz to analyze staged
-    changes and generate a conventional commit message.
-    ```
-
-4.  **Generate a README**:
-    Navigate to your project root and run:
-
-    ```bash
-    gitz readme
-    ```
-
-    _Expected Output:_
-    ```
-    README.md generated successfully!
-    ```
+    `gitz` will analyze your staged changes, generate a commit message, and automatically apply it.
 
 ---
 
 ## 📦 Installation
 
-Before installing `gitz`, ensure you have the following prerequisites:
+### Prerequisites
 
-*   **Rust Toolchain**: `gitz` is a Rust application. You'll need the Rust compiler and Cargo (Rust's package manager) installed. If you don't have it, follow the instructions on [rustup.rs](https://rustup.rs/).
-*   **Git**: `gitz` interacts with your Git repositories. Ensure Git is installed and available in your PATH.
+Ensure you have a [Rust toolchain](https://www.rust-lang.org/tools/install) (version 1.70 or higher) installed on your system.
 
 ### Install via Cargo
 
-The easiest way to install `gitz` is directly from [crates.io](https://crates.io/crates/gitz) using Cargo:
+The easiest way to install `gitz` is using Rust's package manager, `cargo`:
 
 ```bash
 cargo install gitz
 ```
 
-### Build from Source
+This command compiles `gitz` and places it in your Cargo bin directory (usually `~/.cargo/bin`), which should be in your system's `PATH`.
 
-If you prefer to build `gitz` from source:
+### From Source
+
+If you prefer to build from source, follow these steps:
 
 1.  **Clone the repository**:
-
     ```bash
-    git clone https://github.com/USER/REPO.git
-    cd REPO
+    git clone https://github.com/YOUR_GITHUB_USER/gitz.git
+    cd gitz
     ```
-
-2.  **Build and install**:
-
+2.  **Build and Install**:
     ```bash
     cargo install --path .
     ```
@@ -129,211 +102,217 @@ If you prefer to build `gitz` from source:
 
 ## 💻 Usage
 
-`gitz` provides two primary commands: `commit` for generating commit messages and `readme` for generating README files.
+`gitz` provides several commands to help you with your development workflow.
 
-### 🤖 AI API Key
+### `gitz commit`
 
-Before using any AI-powered features, ensure your `GEMINI_API_KEY` environment variable is set.
+Generates a Git commit message based on your changes and applies it.
 
 ```bash
-export GEMINI_API_KEY="YOUR_GEMINI_API_KEY_HERE"
+# Generate a commit message for staged changes
+# The message will be directly applied to your git commit.
+git add .
+gitz commit
 ```
 
-### `gitz commit` - AI-Powered Commit Message Generation
+```bash
+# Generate a commit message for ALL changes (staged and unstaged)
+# This is useful for quickly committing everything without staging explicitly.
+gitz commit --all
+```
 
-Generates a conventional commit message based on your Git changes.
+#### Expected Output (Commit message generation)
 
-#### Options
+```bash
+$ gitz commit
+✨ Generating commit message for staged changes...
 
-*   `-s`, `--staged`: Analyze only staged changes (default).
-*   `-a`, `--all`: Analyze all changes (staged and unstaged).
-*   `-m`, `--model <MODEL_NAME>`: Specify the AI model to use (e.g., `gemini-pro`). Overrides `GITZ_DEFAULT_MODEL`.
-*   `--max-tokens <COUNT>`: Set the maximum number of tokens for the AI response. Overrides `GITZ_DEFAULT_MAX_TOKENS`.
-*   `--temperature <VALUE>`: Set the AI generation temperature (0.0-1.0). Overrides `GITZ_DEFAULT_TEMPERATURE`.
-*   `--conventional`: Generate a strictly conventional commit message (type, scope, subject).
+[main d1e7f2b] feat: Implement AI-powered commit message generation
+ 1 file changed, 10 insertions(+)
+```
 
-#### Examples
+### `gitz readme`
 
-1.  **Generate a commit message for staged changes (default)**:
+Generates an initial `README.md` file for your project based on the repository's content.
 
-    ```bash
-    git add .
-    gitz commit
-    ```
+```bash
+# Generate a README.md file in the current directory
+gitz readme
+```
 
-2.  **Generate a commit message for all changes (staged and unstaged)**:
+#### Expected Output (README generation)
 
-    ```bash
-    gitz commit -a
-    ```
+```bash
+$ gitz readme
+✨ Generating README.md...
+📄 README.md generated successfully!
+```
 
-3.  **Specify a different AI model**:
+### CLI Commands
 
-    ```bash
-    gitz commit -s --model gemini-1.5-flash
-    ```
-
-4.  **Force a strictly conventional commit format**:
-
-    ```bash
-    gitz commit -s --conventional
-    ```
-
-### `gitz readme` - AI-Powered README Generation
-
-Generates a comprehensive `README.md` file for your current repository.
-
-#### Options
-
-*   `-o`, `--output <FILE_PATH>`: Specify the output file path (default: `README.md` in the current directory).
-*   `-m`, `--model <MODEL_NAME>`: Specify the AI model to use. Overrides `GITZ_DEFAULT_MODEL`.
-*   `--max-tokens <COUNT>`: Set the maximum number of tokens for the AI response. Overrides `GITZ_DEFAULT_MAX_TOKENS`.
-*   `--temperature <VALUE>`: Set the AI generation temperature. Overrides `GITZ_DEFAULT_TEMPERATURE`.
-*   `-f`, `--force`, `--overwrite`: Overwrite an existing `README.md` without prompting.
-
-#### Examples
-
-1.  **Generate `README.md` in the current directory**:
-
-    ```bash
-    gitz readme
-    ```
-
-2.  **Generate and overwrite an existing `README.md`**:
-
-    ```bash
-    gitz readme --force
-    ```
-
-3.  **Generate a README to a specific file**:
-
-    ```bash
-    gitz readme --output docs/PROJECT.md
-    ```
+| Command    | Description                                                 | Options                       |
+| :--------- | :---------------------------------------------------------- | :---------------------------- |
+| `commit`   | Generates and applies an AI-powered Git commit message.     | `--all`: Include unstaged changes. |
+| `readme`   | Generates an initial `README.md` file for the repository.   | None                          |
+| `--version`| Prints the current version of `gitz`.                       |                               |
+| `--help`   | Displays help information for `gitz` or a subcommand.       |                               |
 
 ---
 
 ## ⚙️ Configuration
 
-`gitz` primarily uses environment variables for configuration. These can be set directly in your shell or via a `.env` file loaded by `dotenvy`.
+`gitz` requires a **Gemini API Key** to interact with the Gemini AI service. This key must be provided via an environment variable.
 
-| Environment Variable          | Description                                                    | Default           |
-| :---------------------------- | :------------------------------------------------------------- | :---------------- |
-| `GEMINI_API_KEY`              | **Required**. Your Google Gemini API key.                      | `None`            |
-| `GITZ_DEFAULT_MODEL`          | The default AI model to use for generation.                    | `gemini-pro`      |
-| `GITZ_DEFAULT_MAX_TOKENS`     | The default maximum tokens for AI responses.                   | `1000`            |
-| `GITZ_DEFAULT_TEMPERATURE`    | The default AI generation temperature (0.0-1.0).               | `0.7`             |
-| `GITZ_DISABLE_COLOR`          | Set to `1` or `true` to disable colored output in the terminal.| `false`           |
+### `GEMINI_API_KEY`
 
-### Example `.env` file
+This environment variable holds your API key for authentication with the Gemini AI API.
 
-Create a file named `.env` in your project root or home directory:
+-   **Required**: Yes
+-   **Example Value**: `AIzaSyB-YOUR_ACTUAL_API_KEY_HERE`
 
-```ini
-GEMINI_API_KEY="YOUR_GEMINI_API_KEY_HERE"
-GITZ_DEFAULT_MODEL="gemini-1.5-flash"
-GITZ_DEFAULT_MAX_TOKENS="2000"
-GITZ_DEFAULT_TEMPERATURE="0.5"
-```
+#### Setting the Environment Variable
+
+1.  **Temporarily (for current session)**:
+    ```bash
+    export GEMINI_API_KEY="YOUR_GEMINI_API_KEY"
+    gitz commit
+    ```
+
+2.  **Persistently (recommended)**:
+    Add the `export` command to your shell's configuration file (e.g., `~/.bashrc`, `~/.zshrc`, `~/.profile`).
+
+    ```bash
+    # In ~/.bashrc or ~/.zshrc
+    export GEMINI_API_KEY="YOUR_GEMINI_API_KEY"
+    ```
+    Remember to source your config file or open a new terminal session for changes to take effect: `source ~/.bashrc`.
+
+3.  **Using a `.env` file**:
+    You can also create a `.env` file in the root of your project or in the directory where you run `gitz`.
+    ```
+    # .env file content
+    GEMINI_API_KEY="YOUR_GEMINI_API_KEY"
+    ```
+    `gitz` uses `dotenvy` to automatically load variables from a `.env` file if found.
 
 ---
 
 ## 📖 Examples
 
-### 1. Generating a Commit Message for New Feature Development
+Here are some real-world scenarios demonstrating `gitz` in action.
 
-Let's say you've implemented a new user authentication module.
+### Scenario 1: Generating a commit message for a new feature
 
-```bash
-# Make changes and add them to the staging area
-git add src/auth.rs src/main.rs Cargo.toml
-
-# Let gitz suggest a commit message
-gitz commit -s
-```
-
-_`gitz` might suggest something like:_
-```
-? Use this commit message? (y/N) y
-feat(auth): Implement user authentication module
-
-This commit introduces a new user authentication module, allowing users to
-log in and manage sessions. It includes JWT token generation and validation.
-```
-
-### 2. Creating a README for a Fresh Repository
-
-Start a new project, commit some initial files, and then generate a README.
+Imagine you've just added a new user authentication module.
 
 ```bash
-# Initialize git and add some initial files (e.g., src/main.rs, Cargo.toml)
-mkdir my-new-project && cd my-new-project
-git init
-echo "fn main() { println!(\"Hello, gitz!\"); }" > src/main.rs
-cargo init --bin
-git add .
-git commit -m "feat: Initial project setup"
+# Make changes...
+# For example, create src/auth.rs and modify src/main.rs
+git add src/auth.rs src/main.rs
 
-# Now, generate the README
+# Use gitz to generate and apply the commit message
+gitz commit
+```
+
+**Potential Generated Commit:**
+
+```
+[main a2b3c4d] feat: Implement user authentication module with JWT
+ 2 files changed, 120 insertions(+)
+ create mode 100644 src/auth.rs
+```
+
+### Scenario 2: Generating a commit message for a bug fix including unstaged changes
+
+You've fixed a typo and a small logical bug, but haven't staged both changes yet.
+
+```bash
+# Make changes to fix a typo in README.md and a bug in src/parser.rs
+# Only README.md is staged, src/parser.rs is unstaged.
+git add README.md
+git status
+```
+```
+On branch main
+Your branch is up to date with 'origin/main'.
+
+Changes to be committed:
+  (use "git restore --staged <file>..." to unstage)
+        modified:   README.md
+
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git restore <file>..." to discard changes in working directory)
+        modified:   src/parser.rs
+```
+
+```bash
+# Use gitz with --all to include both staged and unstaged changes
+gitz commit --all
+```
+
+**Potential Generated Commit:**
+
+```
+[main e5f6g7h] fix: Correct typo in README and resolve parsing error
+ 2 files changed, 5 insertions(+), 2 deletions(-)
+```
+
+### Scenario 3: Generating a README for a new project
+
+You've just initialized a new Rust project and want a basic `README.md`.
+
+```bash
+# Assume you have a new project structure:
+# my_project/
+# ├── Cargo.toml
+# └── src/
+#     └── main.rs
+
+cd my_project
 gitz readme
 ```
 
-_`gitz` will analyze your project and create a comprehensive `README.md`._
-
-```markdown
-# My New Project
-
-A simple Rust application demonstrating basic functionality.
-
-## Features
-- Prints "Hello, gitz!" to the console.
-- Basic Cargo project structure.
-
-## Quick Start
-...
-```
-
-### 3. Overriding AI Parameters for Specific Tasks
-
-You might want a more creative README or a very concise commit message.
-
-```bash
-# For a more creative README, increase temperature:
-gitz readme --temperature 0.9 --output README_creative.md
-
-# For a very focused, short commit message, decrease max tokens:
-git add .
-gitz commit -s --max-tokens 50
-```
+This will create a `README.md` file in the `my_project` directory, potentially outlining the project's purpose, installation, and basic usage based on `Cargo.toml` and `src/main.rs` content.
 
 ---
 
 ## 🤝 Contributing
 
-We welcome contributions from the community! If you're interested in improving `gitz`, please check out our [CONTRIBUTING.md](CONTRIBUTING.md) guide.
+We welcome contributions to `gitz`! If you're interested in improving this project, please consider:
+
+-   Reporting bugs
+-   Suggesting new features
+-   Submitting pull requests
+
+For more detailed information, please refer to our [CONTRIBUTING.md](CONTRIBUTING.md) guide.
 
 ### Development Setup
 
 1.  **Clone the repository**:
     ```bash
-    git clone https://github.com/USER/REPO.git
-    cd REPO
+    git clone https://github.com/YOUR_GITHUB_USER/gitz.git
+    cd gitz
     ```
-2.  **Install dependencies**:
-    Rust's Cargo will automatically handle dependencies when you build or run.
-3.  **Run tests**:
+2.  **Build the project**:
     ```bash
-    cargo test
+    cargo build
     ```
+
+### Running Tests
+
+To run the test suite:
+
+```bash
+cargo test
+```
 
 ---
 
 ## 📝 License
 
-This project is licensed under the **MIT License**.
+`gitz` is licensed under the **MIT License**.
 
-See the [LICENSE](LICENSE) file for details.
+See the [LICENSE](LICENSE) file for more details.
 
-Copyright © 2023-present The `gitz` Contributors.
-
----
+Copyright © 2023, Your Name or Organization.

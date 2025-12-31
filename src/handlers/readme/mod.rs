@@ -1,12 +1,15 @@
 mod filter;
 
 use crate::{
-    handlers::git::{collect_git_metadata, get_git_files},
-    models::{error::APIError, readme::ReadmeAnalysis},
+    handlers::{
+        git::{collect_git_metadata, get_git_files},
+        json,
+    },
+    models::{error::APIError, readme::ReadmeAnalysis, ui},
 };
 use filter::filter_and_process_readme_files;
 use gemini_rust::{Gemini, Model};
-use std::{env, fs, io};
+use std::{env, fs};
 
 const README_SYSTEM_PROMPT: &str = r#"
 You are an expert GitHub README architect specializing in creating visually stunning, developer-friendly documentation.
@@ -145,18 +148,25 @@ OUTPUT: Pure Markdown only, no explanations or meta-commentary.
 "#;
 
 pub async fn handle_readme() -> Result<(), APIError> {
-    let files = get_git_files()?
-        .ok_or_else(|| APIError::new_msg("README", "Failed to get git files"))?;
-    let file_contents =
-        filter_and_process_readme_files(files.iter().map(AsRef::as_ref).collect())?;
+    ui::Logger::header("README GENERATOR");
+    ui::Logger::step("Collecting repository files...");
 
-    let git_context = collect_git_metadata();
+    let files =
+        get_git_files().map_err(|_| APIError::new_msg("README", "Failed to get git files"))?;
 
+    let file_contents = filter_and_process_readme_files(files.iter().map(AsRef::as_ref).collect())?;
+
+    ui::Logger::step("Gathering git metadata...");
+    let git_context = collect_git_metadata()?;
+
+    ui::Logger::step("Initializing Gemini AI...");
     let api_key =
         env::var("GEMINI_API_KEY").map_err(|e| APIError::new("GEMINI_API_KEY not found", e))?;
-    let client =
-        Gemini::with_model(api_key, Model::Gemini25Flash).map_err(|e| APIError::new("Gemini", e))?;
 
+    let client = Gemini::with_model(api_key, Model::Gemini25Flash)
+        .map_err(|e| APIError::new("Gemini", e))?;
+
+    ui::Logger::step("Analyzing repository structure...");
     let analysis_response = client
         .generate_content()
         .with_system_instruction(README_SYSTEM_PROMPT)
@@ -168,37 +178,31 @@ pub async fn handle_readme() -> Result<(), APIError> {
         .map_err(|e| APIError::new("Gemini", e))?;
 
     let analysis_text = analysis_response.text();
+    let json_str = json::handle_json_strip(&analysis_text);
 
-    let mut json_str = analysis_text.trim();
-    if json_str.starts_with("```json") {
-        json_str = json_str.strip_prefix("```json").unwrap();
-    }
-    if json_str.ends_with("```") {
-        json_str = json_str.strip_suffix("```").unwrap();
-    }
+    let analysis: ReadmeAnalysis =
+        serde_json::from_str(&json_str).map_err(|e| APIError::new("Invalid analysis JSON", e))?;
 
-    json_str = json_str.trim();
+    ui::Logger::success("Analysis complete!");
+    ui::Logger::header("README CONFIGURATION");
 
-    let analysis: ReadmeAnalysis = serde_json::from_str(json_str)
-        .map_err(|e| APIError::new("Invalid analysis JSON", e))?;
-
-    log::info!("\n=== README QUESTIONS ===\n");
+    let mut answers = Vec::new();
 
     for (i, q) in analysis.questions.iter().enumerate() {
-        log::info!("{}. {}", i + 1, q.qe);
+        let options: Vec<&str> = q.and.iter().map(|s| s.as_str()).collect();
 
-        for opt in &q.and {
-            log::info!("   {}", opt);
-        }
+        ui::Logger::dim(&format!("Question {}/{}", i + 1, analysis.questions.len()));
 
-        log::info!("");
+        let selected_idx = ui::Input::select(&q.qe, &options);
+
+        answers.push(format!("{}. {}", i + 1, options[selected_idx]));
+
+        println!();
     }
 
-    log::info!("Enter answers (one per space):");
-    let mut answers_raw = String::new();
-    io::stdin()
-        .read_line(&mut answers_raw)
-        .map_err(|e| APIError::new("STDIN", e))?;
+    let answers_formatted = answers.join("\n");
+
+    ui::Logger::step("Generating README with your selections...");
 
     let readme_response = client
         .generate_content()
@@ -225,10 +229,10 @@ INSTRUCTIONS:
 - Fill only missing README sections
 - Generate final README.md in Markdown
 "#,
-            analysis.extracted.project_name.unwrap_or_default(),
+            analysis.extracted.project_name.as_deref().unwrap_or(""),
             analysis.extracted.project_main_points.join("\n- "),
             analysis.extracted.tech_stack.join(", "),
-            answers_raw
+            answers_formatted
         ))
         .execute()
         .await
@@ -236,8 +240,11 @@ INSTRUCTIONS:
 
     let file_path = "README.md";
 
+    ui::Logger::step("Writing README.md...");
     fs::write(file_path, readme_response.text()).map_err(|e| APIError::new("fs::write", e))?;
-    log::info!("Readme successfully added.");
+
+    ui::Logger::done("README.md successfully generated!");
+    ui::Logger::kv("Location", file_path);
 
     Ok(())
 }

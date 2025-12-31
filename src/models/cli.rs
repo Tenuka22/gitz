@@ -1,3 +1,5 @@
+use std::fmt;
+
 use clap::{Parser, ValueEnum};
 
 #[derive(Clone, Debug, ValueEnum)]
@@ -14,6 +16,16 @@ pub enum CommitVarient {
     Staged,
     #[value(name = "any")]
     Any,
+}
+
+impl fmt::Display for CommitVarient {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let s = match self {
+            CommitVarient::Staged => "staged",
+            CommitVarient::Any => "any",
+        };
+        write!(f, "{s}")
+    }
 }
 
 #[derive(Parser, Debug)]

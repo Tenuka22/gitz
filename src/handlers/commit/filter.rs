@@ -1,4 +1,4 @@
-use crate::handlers::utils::is_priority_file;
+use crate::{handlers::utils::is_priority_file, models::ui};
 
 // Maximum number of characters to include in the diff context.
 // This helps prevent exceeding token limits and keeps the context focused.
@@ -20,7 +20,7 @@ fn is_ignorable_file(file_path: &str) -> bool {
 /// 3.  **Truncates long diffs**: If the total size exceeds `MAX_CONTEXT_LENGTH`,
 ///     it truncates the diff and appends a notice.
 pub fn filter_diff(diff: &str) -> String {
-    log::info!("Filtering a {} length of a diff.", diff.len());
+    ui::Logger::dim(&format!("Filtering a {} length of a diff.", diff.len()));
     let mut priority_parts = Vec::new();
     let mut other_parts = Vec::new();
     let mut changed_files_summary = Vec::new();
@@ -56,7 +56,8 @@ pub fn filter_diff(diff: &str) -> String {
     }
 
     if priority_parts.is_empty() && other_parts.is_empty() && !diff.is_empty() {
-        return "Filtered out diff contents. Likely only lockfiles or ignored files were changed.".to_string();
+        return "Filtered out diff contents. Likely only lockfiles or ignored files were changed."
+            .to_string();
     }
 
     let mut indexed_diff = String::new();
@@ -79,11 +80,11 @@ pub fn filter_diff(diff: &str) -> String {
         indexed_diff.push_str("... (diff truncated)");
     }
 
-    log::info!(
+    ui::Logger::dim(&format!(
         "Filtering the full {} diff is done and the new diff contain only {} length.",
         diff.len(),
         indexed_diff.len()
-    );
+    ));
 
     indexed_diff
 }

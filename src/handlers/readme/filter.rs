@@ -114,7 +114,13 @@ pub fn filter_and_process_readme_files(files: Vec<&str>) -> Result<String, APIEr
 
             content.push_str(&format!("--- File: {} ---\n", file_path));
             if file_content.len() > MAX_FILE_CONTENT_LENGTH {
-                file_content.truncate(MAX_FILE_CONTENT_LENGTH);
+                let mut cut_off_point = MAX_FILE_CONTENT_LENGTH;
+
+                while cut_off_point > 0 && !file_content.is_char_boundary(cut_off_point) {
+                    cut_off_point -= 1;
+                }
+
+                file_content.truncate(cut_off_point);
                 file_content.push_str("\n... (file truncated)\n");
             }
             *total_len += file_content.len();

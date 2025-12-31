@@ -1,6 +1,10 @@
 use crate::{
     handlers::{self, commit::filter},
-    models::{self, error::APIError},
+    models::{
+        self,
+        error::APIError,
+        ui::{self, InfiniteLoader},
+    },
 };
 use gemini_rust::{Gemini, Model};
 use std::env;
@@ -8,16 +12,31 @@ use std::env;
 pub async fn handle_commit_message(
     commit_scope: Option<models::cli::CommitVarient>,
 ) -> Result<(), APIError> {
-    let diff = handlers::commit::diff::get_git_diff(commit_scope)?
-        .ok_or_else(|| APIError::new_msg("Diff extraction", "No diff found"))?;
+    ui::Logger::dim(&format!(
+        "Starting execution of creating a {} commit",
+        commit_scope
+            .as_ref()
+            .map_or(&models::cli::CommitVarient::Any, |v| v)
+    ));
+
+    let diff = handlers::commit::diff::get_git_diff(commit_scope)?;
 
     let filtered_contents = filter::filter_diff(&diff);
 
     let api_key =
         env::var("GEMINI_API_KEY").map_err(|e| APIError::new("GEMINI_API_KEY not found", e))?;
 
-    let client =
-        Gemini::with_model(&api_key, Model::Gemini25Flash).map_err(|e| APIError::new("Gemini", e))?;
+    let mut loader = InfiniteLoader::new("Ai Agent initialization.");
+
+    loader.tick();
+    loader.tick();
+    loader.tick();
+
+    let client = Gemini::with_model(&api_key, Model::Gemini25Flash)
+        .map_err(|e| APIError::new("Gemini", e))?;
+
+    loader.set_progress(45.0);
+    loader.tick();
 
     let response = client
         .generate_content()
@@ -57,8 +76,12 @@ pub async fn handle_commit_message(
         .await
         .map_err(|e| APIError::new("Gemini", e))?;
 
-    log::info!("Commti message done \n{}", response.text());
+    loader.set_progress(100.0);
+    loader.tick();
+
+    loader.finish("Commti message done");
+    println!();
+    ui::Logger::command(&response.text());
 
     Ok(())
 }
-

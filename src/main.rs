@@ -1,62 +1,63 @@
 mod handlers;
 mod models;
 
-use colored::*;
-
-use crate::models::cli::{Cli, CliVarient};
-use crate::models::error::APIError;
+use crate::models::cli;
+use crate::models::error;
+use crate::models::ui;
 use clap::Parser;
 use dotenvy::dotenv_override;
-use log::{error, info};
-use std::io::Write;
 
-#[tokio::main]
-async fn main() {
-    init_logger();
-    dotenv_override().ok();
-
-    let cli = Cli::parse();
-
-    if let Err(e) = run(cli).await {
-        error!("Application error: {}", e);
-        std::process::exit(1);
-    }
-}
-
-fn init_logger() {
-    env_logger::Builder::new()
-        .format(|buf, record| {
-            let level = match record.level() {
-                log::Level::Error => "ERROR".red().bold(),
-                log::Level::Warn => "WARN ".yellow().bold(),
-                log::Level::Info => "INFO ".green().bold(),
-                log::Level::Debug => "DEBUG".blue().bold(),
-                log::Level::Trace => "TRACE".purple().bold(),
-            };
-
-            writeln!(
-                buf,
-                "{} {} {}",
-                "====".bright_black(),
-                level,
-                record.args().to_string().bright_blue()
-            )
-        })
-        .filter_level(log::LevelFilter::Info)
-        .parse_default_env()
-        .init();
-}
-
-async fn run(cli: Cli) -> Result<(), APIError> {
+async fn run(cli: cli::Cli) -> Result<(), error::APIError> {
     match cli.varient {
-        CliVarient::CommitMessage => {
-            info!("Generating commit message...");
+        cli::CliVarient::CommitMessage => {
             crate::handlers::commit::message::handle_commit_message(cli.commit_scope).await?;
         }
-        CliVarient::Readme => {
-            info!("Generating README...");
+        cli::CliVarient::Readme => {
             crate::handlers::readme::handle_readme().await?;
         }
     }
     Ok(())
+}
+use std::panic;
+
+#[tokio::main]
+async fn main() {
+    dotenv_override().ok();
+
+    panic::set_hook(Box::new(|panic_info| {
+        let msg = if let Some(s) = panic_info.payload().downcast_ref::<&str>() {
+            s.to_string()
+        } else if let Some(s) = panic_info.payload().downcast_ref::<String>() {
+            s.clone()
+        } else {
+            "Undiagnized heart attack occured,".to_string()
+        };
+
+        let location = panic_info
+            .location()
+            .map(|l| format!("{}:{}:{}", l.file(), l.line(), l.column()));
+
+        ui::Logger::fatal(&msg, location.as_deref());
+    }));
+
+    ui::Logger::header("GITZ A renovated ai commits and readmes");
+
+    let git_repo_result =
+        handlers::git::ensure_git_repo().map_err(|e| error::APIError::new("Git", e));
+
+    match git_repo_result {
+        Ok(_) => ui::Logger::dim("GITZ found a git repo."),
+        Err(e) => {
+            ui::Logger::error(&e.to_string());
+            std::process::exit(1);
+        }
+    }
+    let cli = cli::Cli::parse();
+
+    if let Err(e) = run(cli).await {
+        println!();
+        ui::Logger::error(&e.to_string());
+        std::process::exit(1);
+    }
+    ui::Logger::clear_screen();
 }
