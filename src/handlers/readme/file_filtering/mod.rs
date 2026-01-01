@@ -1,4 +1,4 @@
-use crate::handlers::utils::is_priority_file;
+use crate::handlers::utils::is_config_file;
 use crate::models::error::APIError;
 use std::collections::BTreeMap;
 use std::fs;
@@ -161,7 +161,7 @@ pub fn filter_and_process_readme_files(files: Vec<&str>) -> Result<String, APIEr
             continue; // Explicitly ignore test files
         }
 
-        if is_priority_file(file) {
+        if is_config_file(file) {
             priority_files.push(file);
         } else if is_interesting_file(file) {
             interesting_files.push(file);

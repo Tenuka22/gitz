@@ -1,4 +1,4 @@
-use crate::{handlers::utils::is_priority_file, models::ui};
+use crate::{handlers::utils::is_config_file, models::ui};
 
 // Maximum number of characters to include in the diff context.
 // This helps prevent exceeding token limits and keeps the context focused.
@@ -42,7 +42,7 @@ pub fn filter_diff(diff: &str) -> String {
                 };
                 changed_files_summary.push(format!("- {} ({})", file_name, status));
 
-                if is_priority_file(file_name) {
+                if is_config_file(file_name) {
                     priority_parts.push(format!("diff --git {}", part));
                 } else {
                     other_parts.push(format!("diff --git {}", part));

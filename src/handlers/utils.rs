@@ -1,6 +1,6 @@
 use std::path::Path;
 
-pub fn is_priority_file(file_path: &str) -> bool {
+pub fn is_config_file(file_path: &str) -> bool {
     matches!(
         Path::new(file_path).file_name().and_then(|s| s.to_str()),
         Some("Cargo.toml")
