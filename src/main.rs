@@ -59,5 +59,4 @@ async fn main() {
         ui::Logger::error(&e.to_string());
         std::process::exit(1);
     }
-    ui::Logger::clear_screen();
 }
