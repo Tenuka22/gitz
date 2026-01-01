@@ -36,4 +36,8 @@ pub struct Cli {
 
     #[arg(value_enum)]
     pub commit_scope: Option<CommitVarient>,
+
+    /// Automatically commit with the generated message
+    #[arg(long)]
+    pub commit: bool,
 }
