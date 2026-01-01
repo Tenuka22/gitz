@@ -23,7 +23,7 @@ pub fn get_git_diff(commit_scope: Option<models::cli::CommitVarient>) -> Result<
 
     match scope {
         models::cli::CommitVarient::Staged => {
-            command.push("stage");
+            command.push("--staged");
         }
         models::cli::CommitVarient::Any => {
             command.push("HEAD");
@@ -34,27 +34,29 @@ pub fn get_git_diff(commit_scope: Option<models::cli::CommitVarient>) -> Result<
     let diff = handlers::git::git_cmd(&command, "Git diff extraction").map_err(|_| {
         ui::Logger::clear_line();
 
+        let scope_display = commit_scope
+            .as_ref()
+            .map_or(&models::cli::CommitVarient::Any, |v| v);
+
         return APIError::new_msg(
             "Git diff extraction",
             &format!(
                 "Failed to extract {} diff. Check if there are any differences.",
-                &commit_scope
-                    .clone()
-                    .as_ref()
-                    .map_or(&models::cli::CommitVarient::Any, |v| v)
+                scope_display
             ),
         );
     })?;
 
     if diff.trim() == "" {
+        let scope_display = commit_scope
+            .as_ref()
+            .map_or(&models::cli::CommitVarient::Any, |v| v);
+        
         return Err(APIError::new_msg(
             "Git diff extraction",
             &format!(
                 "Failed to extract {} diff. The diff was empty.",
-                &commit_scope
-                    .clone()
-                    .as_ref()
-                    .map_or(&models::cli::CommitVarient::Any, |v| v)
+                scope_display
             ),
         ));
     }
