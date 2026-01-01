@@ -18,6 +18,15 @@ pub enum CommitVarient {
     Any,
 }
 
+#[derive(Clone, Debug, ValueEnum, Default)]
+pub enum Provider {
+    #[default]
+    #[value(name = "gemini")]
+    Gemini,
+    #[value(name = "cerebras")]
+    Cerebras,
+}
+
 impl fmt::Display for CommitVarient {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let s = match self {
@@ -44,4 +53,8 @@ pub struct Cli {
     /// Generate commit message without emojis (follows conventional git commit format)
     #[arg(long)]
     pub no_emoji: bool,
+
+    /// AI provider to use (gemini or cerebras)
+    #[arg(long, default_value = "gemini")]
+    pub provider: Provider,
 }

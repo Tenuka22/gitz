@@ -1,18 +1,17 @@
 use crate::{
-    handlers::{self, commit::filter},
+    handlers::{self, commit::filter, ai},
     models::{
         self,
         error::APIError,
         ui::{self, InfiniteLoader},
     },
 };
-use gemini_rust::{Gemini, GenerationResponse, Model};
-use std::env;
 use tokio_retry::{Retry, strategy::FixedInterval};
 
 pub async fn handle_commit_message(
     commit_scope: Option<models::cli::CommitVarient>,
     no_emoji: bool,
+    provider: models::cli::Provider,
 ) -> Result<String, APIError> {
     ui::Logger::dim(&format!(
         "Starting execution of creating a {} commit",
@@ -25,17 +24,13 @@ pub async fn handle_commit_message(
 
     let filtered_contents = filter::filter_diff(&diff);
 
-    let api_key =
-        env::var("GEMINI_API_KEY").map_err(|e| APIError::new("GEMINI_API_KEY not found", e))?;
-
     let mut loader = InfiniteLoader::new("Ai Agent initialization.");
 
     loader.tick();
     loader.tick();
     loader.tick();
 
-    let client = Gemini::with_model(&api_key, Model::Gemini25Flash)
-        .map_err(|e| APIError::new("Gemini", e))?;
+    let ai_provider = ai::create_provider(provider)?;
 
     loader.set_progress(45.0);
     loader.tick();
@@ -61,7 +56,9 @@ pub async fn handle_commit_message(
            P10: Formatting\n\n\
         Use the provided index of changed files for a quick overview, but focus on the highest priority changes in the full diff. \
         If auth code enables sign-in, highlight that functionality, not just dependency additions. \
-        Be specific about WHAT changed, not just HOW."
+        Be specific about WHAT changed, not just HOW.\n\n\
+        CRITICAL: Output ONLY the commit message itself. Do NOT include any explanations, introductions, meta-commentary, or text like \
+        'Here's a commit message' or 'This commit message follows'. Start directly with the commit message format."
     } else {
         "You are an AI assistant that generates concise, clear, and conventional Git commit messages. \
         Follow these rules:\n\
@@ -87,38 +84,86 @@ pub async fn handle_commit_message(
         🚧 WIP | ⬆️ Upgrade deps | ⬇️ Downgrade deps | 🎉 Initial commit\n\n\
         Use the provided index of changed files for a quick overview, but focus on the highest priority changes in the full diff. \
         If auth code enables sign-in, highlight that functionality, not just dependency additions. \
-        Be specific about WHAT changed, not just HOW."
+        Be specific about WHAT changed, not just HOW.\n\n\
+        CRITICAL: Output ONLY the commit message itself. Do NOT include any explanations, introductions, meta-commentary, or text like \
+        'Here's a commit message' or 'This commit message follows'. Start directly with the commit message format."
     };
 
     let attempts = 3; // TODO: Add custom attempts
 
-    let result = Retry::spawn(
+    let mut message = Retry::spawn(
         FixedInterval::from_millis(100).take(attempts),
         || async {
-            let response = client
-                .generate_content()
-                .with_system_prompt(system_prompt)
-                .with_user_message(format!(
-                    "Generate a commit message for this git diff, which is preceded by an index of changed files:\n\n```\n{}\n```\n\n\
-                    Output only the commit message without extra commentary.",
-                    filtered_contents
-                ))
-                .execute()
-                .await
-                .map_err(|e| APIError::new("Gemini commit message generation", e))?;
-
-            Ok::<GenerationResponse, APIError>(response)
+            let response = ai_provider
+                .generate_content(
+                    Some(system_prompt),
+                    vec![&format!(
+                        "Generate a commit message for this git diff, which is preceded by an index of changed files:\n\n```\n{}\n```\n\n\
+                        IMPORTANT: Output ONLY the commit message itself. Do NOT include:\n\
+                        - Any introductory text like 'Here's a commit message' or 'This commit message follows'\n\
+                        - Explanations about the commit format\n\
+                        - Meta-commentary or descriptions\n\
+                        - Code blocks or markdown formatting around the message\n\
+                        Start directly with the commit message (e.g., 'fix(scope): description' or '✨ fix(scope): description').",
+                        filtered_contents
+                    )],
+                )
+                .await?;
+            Ok::<String, APIError>(response)
         },
     )
     .await
-    .map_err(|e| APIError::new("Gemini commit message generation", e))?;
+    .map_err(|e| APIError::new("AI provider commit message generation", e))?;
+
+    // Post-process to remove any unwanted prefixes or explanations
+    message = message.trim().to_string();
+    
+    // Remove common unwanted prefixes
+    let unwanted_prefixes = [
+        "Here's a commit message",
+        "Here is a commit message",
+        "This commit message",
+        "The commit message",
+        "Commit message:",
+        "```",
+    ];
+    
+    for prefix in &unwanted_prefixes {
+        if message.starts_with(prefix) {
+            // Find the first line that looks like a commit message (starts with type or emoji)
+            let lines: Vec<&str> = message.lines().collect();
+            for (i, line) in lines.iter().enumerate() {
+                let trimmed = line.trim();
+                // Check if this line looks like a commit message
+                if trimmed.starts_with("fix(") || trimmed.starts_with("feat(") || 
+                   trimmed.starts_with("✨") || trimmed.starts_with("🐛") ||
+                   trimmed.starts_with("refactor(") || trimmed.starts_with("docs(") ||
+                   trimmed.starts_with("chore(") || trimmed.starts_with("test(") ||
+                   trimmed.starts_with("perf(") || trimmed.starts_with("style(") ||
+                   trimmed.starts_with("build(") || trimmed.starts_with("ci(") {
+                    message = lines[i..].join("\n").trim().to_string();
+                    break;
+                }
+            }
+        }
+    }
+    
+    // Remove markdown code blocks if present
+    if message.starts_with("```") {
+        message = message
+            .trim_start_matches("```")
+            .trim_start_matches("git")
+            .trim_start_matches("commit")
+            .trim_end_matches("```")
+            .trim()
+            .to_string();
+    }
 
     loader.set_progress(100.0);
     loader.tick();
 
-    loader.finish("Commti message done");
+    loader.finish("Commit message done");
     println!();
-    let message = result.text();
     ui::Logger::command(&message);
 
     Ok(message)

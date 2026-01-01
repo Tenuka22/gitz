@@ -2,14 +2,14 @@ mod filter;
 
 use crate::{
     handlers::{
+        ai,
         git::{collect_git_metadata, get_git_files},
         json,
     },
-    models::{error::APIError, readme::ReadmeAnalysis, ui},
+    models::{error::APIError, readme::ReadmeAnalysis, ui, cli::Provider},
 };
 use filter::filter_and_process_readme_files;
-use gemini_rust::{Gemini, GenerationResponse, Model};
-use std::{env, fs};
+use std::fs;
 use tokio_retry::{Retry, strategy::FixedInterval};
 
 const README_ANALYSIS_PROMPT: &str = r#"
@@ -207,7 +207,7 @@ WHAT NOT TO DO:
 ❌ Don't add your own assumptions beyond provided data
 "#;
 
-pub async fn handle_readme() -> Result<(), APIError> {
+pub async fn handle_readme(provider: Provider) -> Result<(), APIError> {
     ui::Logger::header("README GENERATOR");
     ui::Logger::step("Collecting repository files...");
 
@@ -219,35 +219,36 @@ pub async fn handle_readme() -> Result<(), APIError> {
     ui::Logger::step("Gathering git metadata...");
     let git_context = collect_git_metadata()?;
 
-    ui::Logger::step("Initializing Gemini AI...");
-    let api_key =
-        env::var("GEMINI_API_KEY").map_err(|e| APIError::new("GEMINI_API_KEY not found", e))?;
+    let provider_name = match provider {
+        Provider::Gemini => "Gemini",
+        Provider::Cerebras => "Cerebras",
+    };
+    ui::Logger::step(&format!("Initializing {} AI...", provider_name));
 
-    let client = Gemini::with_model(api_key, Model::Gemini25Flash)
-        .map_err(|e| APIError::new("Gemini", e))?;
+    let ai_provider = ai::create_provider(provider)?;
 
     let attempts = 3; // TODO: Add custom attempts
 
     ui::Logger::step("Analyzing repository structure...");
-    let analysis_response = Retry::spawn(
+    
+    let analysis_text = Retry::spawn(
         FixedInterval::from_millis(100).take(attempts),
         || async {
-            let response = client
-                .generate_content()
-                .with_system_instruction(README_ANALYSIS_PROMPT)
-                .with_user_message(&file_contents)
-                .with_user_message("Analyze this codebase. Extract as much info as possible to make the most comprehensive analysis, then ask ONLY essential questions about information you cannot infer from the code.")
-                .execute()
-                .await
-                .map_err(|e| APIError::new("Gemini", e))?;
-
-            Ok::<GenerationResponse, APIError>(response)
+            let response = ai_provider
+                .generate_content(
+                    Some(README_ANALYSIS_PROMPT),
+                    vec![
+                        &file_contents,
+                        "Analyze this codebase. Extract as much info as possible to make the most comprehensive analysis, then ask ONLY essential questions about information you cannot infer from the code.",
+                    ],
+                )
+                .await?;
+            Ok::<String, APIError>(response)
         },
     )
     .await
-    .map_err(|e| APIError::new("Gemini Readme Analysis", e))?;
+    .map_err(|e| APIError::new("AI provider Readme Analysis", e))?;
 
-    let analysis_text = analysis_response.text();
     let json_str = json::handle_json_strip(&analysis_text);
 
     let analysis: ReadmeAnalysis =
@@ -335,24 +336,22 @@ Generate a complete, production-ready README.md using the above context. Use ext
         answers.join("\n\n")
     );
 
-    let readme_response = Retry::spawn(FixedInterval::from_millis(100).take(attempts), || async {
-        let response = client
-            .generate_content()
-            .with_system_instruction(README_GENERATION_PROMPT)
-            .with_user_message(&context_message)
-            .execute()
-            .await
-            .map_err(|e| APIError::new("Gemini", e))?;
-
-        Ok::<GenerationResponse, APIError>(response)
+    let readme_content = Retry::spawn(FixedInterval::from_millis(100).take(attempts), || async {
+        let response = ai_provider
+            .generate_content(
+                Some(README_GENERATION_PROMPT),
+                vec![&context_message],
+            )
+            .await?;
+        Ok::<String, APIError>(response)
     })
     .await
-    .map_err(|e| APIError::new("Gemini Readme Generation", e))?;
+    .map_err(|e| APIError::new("AI provider Readme Generation", e))?;
 
     let file_path = "README.md";
 
     ui::Logger::step("Writing README.md...");
-    fs::write(file_path, readme_response.text()).map_err(|e| APIError::new("fs::write", e))?;
+    fs::write(file_path, readme_content).map_err(|e| APIError::new("fs::write", e))?;
 
     ui::Logger::done("README.md successfully generated!");
     ui::Logger::kv("Location", file_path);
