@@ -1,8 +1,8 @@
 # 🚀 gitz-cli
 
 > AI-powered Git commit message generation for a focused and accurate development workflow.
-
-![Build](https://img.shields.io/github/actions/workflow/status/Tenuka22/gitz/ci.yml?style=flat-square)
+> 
+[![Rust](https://github.com/Tenuka22/gitz/actions/workflows/rust.yml/badge.svg)](https://github.com/Tenuka22/gitz/actions/workflows/rust.yml)
 ![Version](https://img.shields.io/crates/v/gitz-cli?style=flat-square)
 ![License](https://img.shields.io/badge/license-MIT-blue?style=flat-square)
 ![Language](https://img.shields.io/badge/rust-1.70+-orange?style=flat-square)
