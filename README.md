@@ -38,7 +38,8 @@ It also updates the feature list to better reflect the tool's capabilities.
 
 `gitz-cli` is an AI-powered command-line tool designed to streamline your Git workflow by automatically generating conventional commit messages. It acts as an AI assistant, running manually from the command line as needed before committing to replace manual code review processes with AI suggestions.
 
-*   🎯 **AI-Powered Commit Generation**: Leverages the Google Gemini AI API to generate conventional Git commit messages that adhere to structured rules (subject line, emoji prefixes, body content).
+*   🎯 **AI-Powered Commit Generation**: Leverages AI APIs to generate conventional Git commit messages that adhere to structured rules (subject line, emoji prefixes, body content).
+*   🌐 **Multiple AI Providers**: Supports both Google Gemini and Cerebras AI providers, allowing you to choose the best model for your needs.
 *   ⚡ **Intelligent Diff Filtering**: Optimizes AI input by filtering and truncating Git diffs, ignoring irrelevant files (e.g., lockfiles) and prioritizing meaningful changes to focus on the core modifications.
 *   📦 **Structured Commit Format**: Enforces a consistent and conventional commit message format, including emoji prefixes (`feat:`, `fix:`, `docs:`), imperative verbs, and character limits for clear, readable history.
 *   🔧 **Configurable & Adaptable**: Supports generating commit messages for staged or all changes within your repository and can be configured via environment variables for AI key management.
@@ -139,6 +140,7 @@ This command is the primary entry point for generating commit messages.
 | :---------- | :-------------------------------------------------------------------------- | :------ |
 | `stage`  | Generate a commit message based only on currently staged changes.           | `false` |
 | `any`     | Generate a commit message based on all local changes (staged and unstaged). | `false` |
+| `--provider`| Specify the AI provider to use (`gemini` or `cerebras`).                   | `gemini`  |
 | `--help`    | Print help information.                                                     | `false` |
 | `--version` | Print version information.                                                  | `false` |
 
@@ -196,13 +198,19 @@ This command is the primary entry point for generating commit messages.
 
 ## ⚙️ Configuration
 
-`gitz-cli` relies on the `GEMINI_API_KEY` for interaction with the Google Gemini AI.
+`gitz-cli` supports multiple AI providers. You need to configure the appropriate environment variables for the provider you want to use.
 
-### Environment Variables
+### Google Gemini
 
 | Variable          | Description                                                                                     | Required |
 | :---------------- | :---------------------------------------------------------------------------------------------- | :------- |
 | `GEMINI_API_KEY`  | Your API key for accessing the Google Gemini AI. Obtainable from [Google AI Studio](https://makersuite.google.com/keys). | Yes      |
+
+### Cerebras
+
+| Variable          | Description                                                                                     | Required |
+| :---------------- | :---------------------------------------------------------------------------------------------- | :------- |
+| `CEREBRAS_API_KEY`  | Your API key for accessing the Cerebras AI. | Yes      |
 
 > 💡 **Tip**: To influence the AI's understanding of your changes, `gitz-cli` filters and truncates diffs. You can customize the file filtering logic by adding a `.gitzignore` file in your repository's root, similar to `.gitignore`. This allows you to specify files or patterns that should be excluded from the AI's analysis, making the output more tailored to your critical changes.
 
