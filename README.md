@@ -2,7 +2,7 @@
 
 > *Craft intelligent Git commit messages with AI, enhancing your development workflow.*
 
-[![Build](https://img.shields.io/github/actions/workflow/status/Tenuka22/gitz/ci.yml?style=flat-square)](https://github.com/Tenuka22/gitz/actions)
+[![Rust](https://github.com/Tenuka22/gitz/actions/workflows/rust.yml/badge.svg)](https://github.com/Tenuka22/gitz/actions/workflows/rust.yml)
 [![Version](https://img.shields.io/crates/v/gitz?style=flat-square)](https://crates.io/crates/gitz)
 [![License](https://img.shields.io/badge/license-MIT-blue?style=flat-square)](LICENSE)
 [![Language](https://img.shields.io/badge/rust-1.70+-orange?style=flat-square)](https://www.rust-lang.org/)
