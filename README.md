@@ -1,14 +1,14 @@
-# 🚀 gitz
+# 🚀 gitz-cli
 
 > *Craft intelligent Git commit messages with AI, enhancing your development workflow.*
 
 [![Rust](https://github.com/Tenuka22/gitz/actions/workflows/rust.yml/badge.svg)](https://github.com/Tenuka22/gitz/actions/workflows/rust.yml)
-[![Version](https://img.shields.io/crates/v/gitz?style=flat-square)](https://crates.io/crates/gitz)
+[![Version](https://img.shields.io/crates/v/gitz-cli?style=flat-square)](https://crates.io/crates/gitz-cli)
 [![License](https://img.shields.io/badge/license-MIT-blue?style=flat-square)](LICENSE)
 [![Language](https://img.shields.io/badge/rust-1.70+-orange?style=flat-square)](https://www.rust-lang.org/)
 
 ```
-$ gitz commit --staged
+$ gitz-cli commit --staged
 ✨ Generating commit message...
 ✔ Commit message generated!
 
@@ -36,7 +36,7 @@ It also updates the feature list to better reflect the tool's capabilities.
 
 ## ✨ Features
 
-`gitz` is an AI-powered command-line tool designed to streamline your Git workflow by automatically generating conventional commit messages. It acts as an AI assistant, running manually from the command line as needed before committing to replace manual code review processes with AI suggestions.
+`gitz-cli` is an AI-powered command-line tool designed to streamline your Git workflow by automatically generating conventional commit messages. It acts as an AI assistant, running manually from the command line as needed before committing to replace manual code review processes with AI suggestions.
 
 *   🎯 **AI-Powered Commit Generation**: Leverages the Google Gemini AI API to generate conventional Git commit messages that adhere to structured rules (subject line, emoji prefixes, body content).
 *   ⚡ **Intelligent Diff Filtering**: Optimizes AI input by filtering and truncating Git diffs, ignoring irrelevant files (e.g., lockfiles) and prioritizing meaningful changes to focus on the core modifications.
@@ -48,15 +48,15 @@ It also updates the feature list to better reflect the tool's capabilities.
 
 ## 🚀 Quick Start
 
-Get `gitz` up and running in under 30 seconds!
+Get `gitz-cli` up and running in under 30 seconds!
 
 1.  **Install Rust:** If you don't have Rust installed, follow the instructions on [rustup.rs](https://rustup.rs/).
 2.  **Get your Gemini API Key:** Obtain a `GEMINI_API_KEY` from Google AI Studio.
-3.  **Install `gitz`:**
+3.  **Install `gitz-cli`:**
 
     ```bash
     # Install gitz via Cargo
-    cargo install gitz
+    cargo install gitz-cli
     ```
 
 4.  **Set Environment Variable:**
@@ -77,14 +77,14 @@ Get `gitz` up and running in under 30 seconds!
     git add .
 
     # Let gitz generate a message for staged changes
-    gitz commit --staged
+    gitz-cli commit --staged
     ```
 
 ---
 
 ## 📦 Installation
 
-`gitz` is a Rust-based command-line tool. You'll need the Rust toolchain installed to compile and install it.
+`gitz-cli` is a Rust-based command-line tool. You'll need the Rust toolchain installed to compile and install it.
 
 ### Prerequisites
 
@@ -100,15 +100,15 @@ Get `gitz` up and running in under 30 seconds!
 
 ### Install with Cargo
 
-The easiest way to install `gitz` is through `cargo` from [crates.io](https://crates.io/crates/gitz):
+The easiest way to install `gitz-cli` is through `cargo` from [crates.io](https://crates.io/crates/gitz):
 
 ```bash
-cargo install gitz
+cargo install gitz-cli
 ```
 
 ### Install from Source
 
-You can also build and install `gitz` directly from its source code from the repository maintained by Tenuka22:
+You can also build and install `gitz-cli` directly from its source code from the repository maintained by Tenuka22:
 
 1.  **Clone the repository**:
     ```bash
@@ -119,7 +119,7 @@ You can also build and install `gitz` directly from its source code from the rep
     ```bash
     cargo build --release
     ```
-    The executable will be located at `target/release/gitz`.
+    The executable will be located at `target/release/gitz-cli`.
 3.  **Install to Cargo's bin directory**:
     ```bash
     cargo install --path .
@@ -129,9 +129,9 @@ You can also build and install `gitz` directly from its source code from the rep
 
 ## 💻 Usage
 
-`gitz` is designed to be run manually from the command line before you commit your changes. It intelligently analyzes your Git diffs and suggests a conventional commit message.
+`gitz-cli` is designed to be run manually from the command line before you commit your changes. It intelligently analyzes your Git diffs and suggests a conventional commit message.
 
-### Core Command: `gitz commit`
+### Core Command: `gitz-cli commit`
 
 This command is the primary entry point for generating commit messages.
 
@@ -142,7 +142,7 @@ This command is the primary entry point for generating commit messages.
 | `--help`    | Print help information.                                                     | `false` |
 | `--version` | Print version information.                                                  | `false` |
 
-> ⚠️ **Important**: You must provide either `--staged` or `--all`. If neither is specified, `gitz` will prompt you or show an error.
+> ⚠️ **Important**: You must provide either `--staged` or `--all`. If neither is specified, `gitz-cli` will prompt you or show an error.
 
 ### Examples
 
@@ -153,7 +153,7 @@ This command is the primary entry point for generating commit messages.
     git add src/main.rs
 
     # Use gitz to generate a message for only the staged changes
-    gitz commit --staged
+    gitz-cli commit --staged
     ```
 
     Expected output:
@@ -163,7 +163,7 @@ This command is the primary entry point for generating commit messages.
 
     feat(cli): add staged diff processing for commit messages
 
-    This commit introduces the `--staged` option to `gitz commit`,
+    This commit introduces the `--staged` option to `gitz-cli commit`,
     allowing users to generate commit messages based solely on changes
     that have been added to the Git staging area. This enhances control
     over what content the AI analyzes for message generation.
@@ -176,7 +176,7 @@ This command is the primary entry point for generating commit messages.
     # For example, modify src/lib.rs and Cargo.toml
 
     # Use gitz to generate a message for all local changes (staged and unstaged)
-    gitz commit --all
+    gitz-cli commit --all
     ```
 
     Expected output:
@@ -196,7 +196,7 @@ This command is the primary entry point for generating commit messages.
 
 ## ⚙️ Configuration
 
-`gitz` relies on the `GEMINI_API_KEY` for interaction with the Google Gemini AI.
+`gitz-cli` relies on the `GEMINI_API_KEY` for interaction with the Google Gemini AI.
 
 ### Environment Variables
 
@@ -204,13 +204,13 @@ This command is the primary entry point for generating commit messages.
 | :---------------- | :---------------------------------------------------------------------------------------------- | :------- |
 | `GEMINI_API_KEY`  | Your API key for accessing the Google Gemini AI. Obtainable from [Google AI Studio](https://makersuite.google.com/keys). | Yes      |
 
-> 💡 **Tip**: To influence the AI's understanding of your changes, `gitz` filters and truncates diffs. You can customize the file filtering logic by adding a `.gitzignore` file in your repository's root, similar to `.gitignore`. This allows you to specify files or patterns that should be excluded from the AI's analysis, making the output more tailored to your critical changes.
+> 💡 **Tip**: To influence the AI's understanding of your changes, `gitz-cli` filters and truncates diffs. You can customize the file filtering logic by adding a `.gitzignore` file in your repository's root, similar to `.gitignore`. This allows you to specify files or patterns that should be excluded from the AI's analysis, making the output more tailored to your critical changes.
 
 ---
 
 ## 📖 Examples
 
-Let's walk through a common scenario to see `gitz` in action.
+Let's walk through a common scenario to see `gitz-cli` in action.
 
 ### Scenario: Adding a New Feature and Generating a Commit Message
 
@@ -268,9 +268,9 @@ Imagine Tenuka22 is working on a new feature that involves adding a function to 
     git add .
     ```
 
-5.  **Generate Commit Message with `gitz`:**
+5.  **Generate Commit Message with `gitz-cli`:**
     ```bash
-    gitz commit --staged
+    gitz-cli commit --staged
     ```
 
     ```
@@ -286,7 +286,7 @@ Imagine Tenuka22 is working on a new feature that involves adding a function to 
     ```
 
 6.  **Review and Commit:**
-    The generated message can then be copied and used directly in your `git commit -m` command, or you can use `gitz commit -e` (if available, this feature is not explicitly listed, so I'll keep it simple by just showing message generation).
+    The generated message can then be copied and used directly in your `git commit -m` command, or you can use `gitz-cli commit -e` (if available, this feature is not explicitly listed, so I'll keep it simple by just showing message generation).
 
     ```bash
     # If gitz directly integrates, it would look like:
@@ -297,17 +297,17 @@ Imagine Tenuka22 is working on a new feature that involves adding a function to 
     # It also adds the `rand` crate as a dependency in `Cargo.toml` to support
     # this new functionality."
     ```
-    Or, if `gitz` just prints to stdout, you'd manually paste it.
+    Or, if `gitz-cli` just prints to stdout, you'd manually paste it.
 
 ---
 
 ## 🤝 Contributing
 
-We welcome contributions to `gitz`! Whether it's reporting bugs, suggesting features, or submitting code, your help is appreciated.
+We welcome contributions to `gitz-cli`! Whether it's reporting bugs, suggesting features, or submitting code, your help is appreciated.
 
 ### Development Setup
 
-To get started with development on `gitz`, follow these steps:
+To get started with development on `gitz-cli`, follow these steps:
 
 1.  **Clone the repository**:
     ```bash
