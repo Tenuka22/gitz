@@ -40,4 +40,8 @@ pub struct Cli {
     /// Automatically commit with the generated message
     #[arg(long)]
     pub commit: bool,
+
+    /// Generate commit message without emojis (follows conventional git commit format)
+    #[arg(long)]
+    pub no_emoji: bool,
 }
