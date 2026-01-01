@@ -341,9 +341,13 @@ impl Input {
         }
 
         loop {
-            print!("{} {} ", "→".cyan().bold(), "Select (1-{}):".bright_white());
-            print!("{}", options.len().to_string().bright_cyan());
-            print!(" ");
+            print!(
+                "{} {}{}{}: ",
+                "→".cyan().bold(),
+                "Select (1-".bright_white(),
+                options.len().to_string().bright_white(),
+                ")".bright_white()
+            );
             io::stdout().flush().unwrap();
 
             let mut input = String::new();
@@ -358,7 +362,6 @@ impl Input {
             Logger::error("Invalid selection. Please try again.");
         }
     }
-
     // Multiple choice with descriptions
     pub fn select_with_desc(prompt: &str, options: &[(&str, &str)]) -> usize {
         println!("{} {}", "?".cyan().bold(), prompt.bright_white());
@@ -373,9 +376,13 @@ impl Input {
         }
 
         loop {
-            print!("{} {} ", "→".cyan().bold(), "Select (1-{}):".bright_white());
-            print!("{}", options.len().to_string().bright_cyan());
-            print!(" ");
+            print!(
+                "{} {}{}{}: ",
+                "→".cyan().bold(),
+                "Select (1-".bright_white(),
+                options.len().to_string().bright_white(),
+                ")".bright_white()
+            );
             io::stdout().flush().unwrap();
 
             let mut input = String::new();
