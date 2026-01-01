@@ -1,6 +1,6 @@
 [package]
 name = "gitz-cli"
-version = "0.1.0"
+version = "1.2.0"
 edition = "2024"
 repository = "https://github.com/Tenuka22/gitz"
 description = "Craft intelligent Git commit messages with AI, enhancing your development workflow."
