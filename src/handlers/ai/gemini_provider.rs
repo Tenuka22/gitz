@@ -1,5 +1,5 @@
-use crate::models::error::APIError;
 use super::AIProvider;
+use crate::models::error::APIError;
 use gemini_rust::{Gemini, Model};
 
 pub struct GeminiProvider {

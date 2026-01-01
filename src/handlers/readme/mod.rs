@@ -12,8 +12,7 @@ use filter::filter_and_process_readme_files;
 use std::fs;
 use tokio_retry::{Retry, strategy::FixedInterval};
 
-const README_ANALYSIS_PROMPT: &str = r#"
-You are a GitHub README analyzer. Extract concrete technical facts and ask ONLY essential questions where information cannot be inferred.
+const README_ANALYSIS_PROMPT: &str = r#"# You are a GitHub README analyzer. Extract concrete technical facts and ask ONLY essential questions where information cannot be inferred.
 
 EXTRACTION PRIORITY:
 1. Project name: From Cargo.toml, package.json, setup.py, or repo name
@@ -79,8 +78,7 @@ CRITICAL RULES:
 4. Be intelligent - don't waste user time on obvious things
 5. "extracted.main_functionality" should be concise bullet points of what the code actually does
 "#;
-const README_GENERATION_PROMPT: &str = r#"
-You are a GitHub README generator. Create a visually stunning, production-ready README.md.
+const README_GENERATION_PROMPT: &str = r#"# You are a GitHub README generator. Create a visually stunning, production-ready README.md.
 
 CONTEXT USAGE:
 - Use provided extracted data verbatim - DO NOT re-analyze or repeat
@@ -237,7 +235,7 @@ pub async fn handle_readme(provider: Provider) -> Result<(), APIError> {
             let response = ai_provider
                 .generate_content(
                     Some(README_ANALYSIS_PROMPT),
-                    vec![
+                    vec![ 
                         &file_contents,
                         "Analyze this codebase. Extract as much info as possible to make the most comprehensive analysis, then ask ONLY essential questions about information you cannot infer from the code.",
                     ],
@@ -248,7 +246,6 @@ pub async fn handle_readme(provider: Provider) -> Result<(), APIError> {
     )
     .await
     .map_err(|e| APIError::new("AI provider Readme Analysis", e))?;
-
     let json_str = json::handle_json_strip(&analysis_text);
 
     let analysis: ReadmeAnalysis =
@@ -268,7 +265,8 @@ pub async fn handle_readme(provider: Provider) -> Result<(), APIError> {
         let selected_idx = ui::Input::select(&q.question, &options);
 
         answers.push(format!(
-            "Q{}: {}\nA: {}",
+            "Q{}: {}
+A: {}",
             i + 1,
             q.question,
             options[selected_idx]
@@ -280,7 +278,7 @@ pub async fn handle_readme(provider: Provider) -> Result<(), APIError> {
     ui::Logger::step("Generating README with your selections...");
 
     let context_message = format!(
-        r#"# EXTRACTED PROJECT DATA (use as-is, do not repeat):
+        r##"# EXTRACTED PROJECT DATA (use as-is, do not repeat):
 
 **Project**: {}
 **Type**: {}
@@ -303,7 +301,7 @@ pub async fn handle_readme(provider: Provider) -> Result<(), APIError> {
 
 ---
 
-Generate a complete, production-ready README.md using the above context. Use extracted data verbatim, incorporate git metadata naturally, and fill gaps based on user responses."#,
+Generate a complete, production-ready README.md using the above context. Use extracted data verbatim, incorporate git metadata naturally, and fill gaps based on user responses."##,
         analysis
             .extracted
             .project_name

@@ -36,57 +36,9 @@ pub async fn handle_commit_message(
     loader.tick();
 
     let system_prompt = if no_emoji {
-        "You are an AI assistant that generates concise, clear, and conventional Git commit messages following the Conventional Commits specification. \
-        Follow these rules:\n\
-        1. Be imperative (e.g., 'Add', 'Fix', 'Update', 'Implement', 'Enable').\n\
-        2. Keep subject line under 72 characters.\n\
-        3. Use conventional commit format: <type>(<scope>): <subject>\n\
-           Types: feat, fix, docs, style, refactor, perf, test, chore, build, ci\n\
-        4. Include detailed explanation in the body.\n\
-        5. Prioritize changes by importance:\n\
-           P1: User-facing features\n\
-           P2: Bug fixes\n\
-           P3: Business logic\n\
-           P4: Security & Auth\n\
-           P5: Performance\n\
-           P6: Refactoring\n\
-           P7: Configuration\n\
-           P8: Dependencies\n\
-           P9: Documentation\n\
-           P10: Formatting\n\n\
-        Use the provided index of changed files for a quick overview, but focus on the highest priority changes in the full diff. \
-        If auth code enables sign-in, highlight that functionality, not just dependency additions. \
-        Be specific about WHAT changed, not just HOW.\n\n\
-        CRITICAL: Output ONLY the commit message itself. Do NOT include any explanations, introductions, meta-commentary, or text like \
-        'Here's a commit message' or 'This commit message follows'. Start directly with the commit message format."
+        "You are an AI assistant that generates concise, clear, and conventional Git commit messages following the Conventional Commits specification. \n\n1. Be imperative (e.g., 'Add', 'Fix', 'Update', 'Implement', 'Enable').\n2. Keep subject line under 72 characters.\n3. Use conventional commit format: <type>(<scope>): <subject>\n   Types: feat, fix, docs, style, refactor, perf, test, chore, build, ci\n4. Include detailed explanation in the body.\n5. Prioritize changes by importance:\n   P1: User-facing features\n   P2: Bug fixes\n   P3: Business logic\n   P4: Security & Auth\n   P5: Performance\n   P6: Refactoring\n   P7: Configuration\n   P8: Dependencies\n   P9: Documentation\n   P10: Formatting\n\nUse the provided index of changed files for a quick overview, but focus on the highest priority changes in the full diff. \nIf auth code enables sign-in, highlight that functionality, not just dependency additions. \nBe specific about WHAT changed, not just HOW.\n\nCRITICAL: Output ONLY the commit message itself. Do NOT include any explanations, introductions, meta-commentary, or text like \n'Here's a commit message' or 'This commit message follows'. Start directly with the commit message format."
     } else {
-        "You are an AI assistant that generates concise, clear, and conventional Git commit messages. \
-        Follow these rules:\n\
-        1. Be imperative (e.g., 'Add', 'Fix', 'Update', 'Implement', 'Enable').\n\
-        2. Keep subject line under 72 characters.\n\
-        3. Start with an appropriate emoji prefix.\n\
-        4. Include detailed explanation in the body.\n\
-        5. Prioritize changes by importance:\n\
-           P1: User-facing features\n\
-           P2: Bug fixes\n\
-           P3: Business logic\n\
-           P4: Security & Auth\n\
-           P5: Performance\n\
-           P6: Refactoring\n\
-           P7: Configuration\n\
-           P8: Dependencies\n\
-           P9: Documentation\n\
-           P10: Formatting\n\n\
-        EMOJI GUIDE:\n\
-        ✨ New feature | 🐛 Bug fix | 🔒 Security/auth | ⚡ Performance\n\
-        🎨 UI/UX | ♻️ Refactoring | 🔧 Config | 📦 Dependencies\n\
-        📝 Docs | 💄 Formatting | 🚀 Deployment | 🔥 Remove code\n\
-        🚧 WIP | ⬆️ Upgrade deps | ⬇️ Downgrade deps | 🎉 Initial commit\n\n\
-        Use the provided index of changed files for a quick overview, but focus on the highest priority changes in the full diff. \
-        If auth code enables sign-in, highlight that functionality, not just dependency additions. \
-        Be specific about WHAT changed, not just HOW.\n\n\
-        CRITICAL: Output ONLY the commit message itself. Do NOT include any explanations, introductions, meta-commentary, or text like \
-        'Here's a commit message' or 'This commit message follows'. Start directly with the commit message format."
+        "You are an AI assistant that generates concise, clear, and conventional Git commit messages. \n\n1. Be imperative (e.g., 'Add', 'Fix', 'Update', 'Implement', 'Enable').\n2. Keep subject line under 72 characters.\n3. Start with an appropriate emoji prefix.\n4. Include detailed explanation in the body.\n5. Prioritize changes by importance:\n   P1: User-facing features\n   P2: Bug fixes\n   P3: Business logic\n   P4: Security & Auth\n   P5: Performance\n   P6: Refactoring\n   P7: Configuration\n   P8: Dependencies\n   P9: Documentation\n   P10: Formatting\n\nEMOJI GUIDE:\n✨ New feature | 🐛 Bug fix | 🔒 Security/auth | ⚡ Performance\n🎨 UI/UX | ♻️ Refactoring | 🔧 Config | 📦 Dependencies\n📝 Docs | 💄 Formatting | 🚀 Deployment | 🔥 Remove code\n🚧 WIP | ⬆️ Upgrade deps | ⬇️ Downgrade deps | 🎉 Initial commit\n\nUse the provided index of changed files for a quick overview, but focus on the highest priority changes in the full diff. \nIf auth code enables sign-in, highlight that functionality, not just dependency additions. \nBe specific about WHAT changed, not just HOW.\n\nCRITICAL: Output ONLY the commit message itself. Do NOT include any explanations, introductions, meta-commentary, or text like \n'Here's a commit message' or 'This commit message follows'. Start directly with the commit message format."
     };
 
     let attempts = 3; // TODO: Add custom attempts
@@ -98,13 +50,7 @@ pub async fn handle_commit_message(
                 .generate_content(
                     Some(system_prompt),
                     vec![&format!(
-                        "Generate a commit message for this git diff, which is preceded by an index of changed files:\n\n```\n{}\n```\n\n\
-                        IMPORTANT: Output ONLY the commit message itself. Do NOT include:\n\
-                        - Any introductory text like 'Here's a commit message' or 'This commit message follows'\n\
-                        - Explanations about the commit format\n\
-                        - Meta-commentary or descriptions\n\
-                        - Code blocks or markdown formatting around the message\n\
-                        Start directly with the commit message (e.g., 'fix(scope): description' or '✨ fix(scope): description').",
+                        "Generate a commit message for this git diff, which is preceded by an index of changed files:\n\n```\n{}\n```\n\nIMPORTANT: Output ONLY the commit message itself. Do NOT include:\n- Any introductory text like 'Here's a commit message' or 'This commit message follows'\n- Explanations about the commit format\n- Meta-commentary or descriptions\n- Code blocks or markdown formatting around the message\nStart directly with the commit message (e.g., 'fix(scope): description' or '✨ fix(scope): description').",
                         filtered_contents
                     )],
                 )
