@@ -1,30 +1,32 @@
-# ✨ gitz ✨
+# 🚀 gitz
 
-*Effortlessly generate AI-powered Git commit messages and READMEs from your diffs.*
+> *Craft intelligent Git commit messages with AI, enhancing your development workflow.*
 
-[![Build Status](https://img.shields.io/github/actions/workflow/status/YOUR_GITHUB_USER/gitz/ci.yml?style=flat-square)](https://github.com/YOUR_GITHUB_USER/gitz/actions)
-[![Crates.io Version](https://img.shields.io/crates/v/gitz?style=flat-square)](https://crates.io/crates/gitz)
+[![Build](https://img.shields.io/github/actions/workflow/status/Tenuka22/gitz/ci.yml?style=flat-square)](https://github.com/Tenuka22/gitz/actions)
+[![Version](https://img.shields.io/crates/v/gitz?style=flat-square)](https://crates.io/crates/gitz)
 [![License](https://img.shields.io/badge/license-MIT-blue?style=flat-square)](LICENSE)
-[![Rust](https://img.shields.io/badge/rust-1.70%2B-orange?style=flat-square)](https://www.rust-lang.org)
+[![Language](https://img.shields.io/badge/rust-1.70+-orange?style=flat-square)](https://www.rust-lang.org/)
 
-```bash
-$ gitz commit
-✨ Generating commit message for staged changes...
-
-[main d1e7f2b] feat: Implement AI-powered commit message generation
- 1 file changed, 10 insertions(+)
 ```
+$ gitz commit --staged
+✨ Generating commit message...
+✔ Commit message generated!
+
+feat(readme): improve documentation and add quick start guide
+
+This commit enhances the README with new sections including a quick start,
+detailed installation instructions, and usage examples.
+It also updates the feature list to better reflect the tool's capabilities.
+```
+
 ---
 
-## 🎯 Table of Contents
+## 🌟 Table of Contents
 
 - [✨ Features](#-features)
 - [🚀 Quick Start](#-quick-start)
 - [📦 Installation](#-installation)
 - [💻 Usage](#-usage)
-  - [`gitz commit`](#-gitz-commit)
-  - [`gitz readme`](#-gitz-readme)
-  - [CLI Commands](#-cli-commands)
 - [⚙️ Configuration](#️-configuration)
 - [📖 Examples](#-examples)
 - [🤝 Contributing](#-contributing)
@@ -34,66 +36,91 @@ $ gitz commit
 
 ## ✨ Features
 
-- **AI-powered Commit Messages**: Automatically craft descriptive Git commit messages based on your staged or unstaged changes.
-- **Intelligent Diff Filtering**: Prioritizes and filters Git diff content to provide the most relevant context for AI processing.
-- **Gemini AI Integration**: Seamlessly leverages the Gemini AI API for robust content generation.
-- **README Generation**: Generate initial `README.md` files for your projects based on the current repository context.
-- **Flexible Scope**: Supports processing both **staged and unstaged changes** using the `--all` flag.
-- **Direct Git Integration**: By default, `gitz commit` writes the generated message directly into your Git commit.
+`gitz` is an AI-powered command-line tool designed to streamline your Git workflow by automatically generating conventional commit messages. It acts as an AI assistant, running manually from the command line as needed before committing to replace manual code review processes with AI suggestions.
+
+*   🎯 **AI-Powered Commit Generation**: Leverages the Google Gemini AI API to generate conventional Git commit messages that adhere to structured rules (subject line, emoji prefixes, body content).
+*   ⚡ **Intelligent Diff Filtering**: Optimizes AI input by filtering and truncating Git diffs, ignoring irrelevant files (e.g., lockfiles) and prioritizing meaningful changes to focus on the core modifications.
+*   📦 **Structured Commit Format**: Enforces a consistent and conventional commit message format, including emoji prefixes (`feat:`, `fix:`, `docs:`), imperative verbs, and character limits for clear, readable history.
+*   🔧 **Configurable & Adaptable**: Supports generating commit messages for staged or all changes within your repository and can be configured via environment variables for AI key management.
+*   🤝 **Interactive CLI Experience**: Provides real-time interactive terminal feedback with progress loaders and colored logging for a user-friendly experience.
 
 ---
 
 ## 🚀 Quick Start
 
-Get up and running with `gitz` in no time!
+Get `gitz` up and running in under 30 seconds!
 
-1.  **Install `gitz`**:
+1.  **Install Rust:** If you don't have Rust installed, follow the instructions on [rustup.rs](https://rustup.rs/).
+2.  **Get your Gemini API Key:** Obtain a `GEMINI_API_KEY` from Google AI Studio.
+3.  **Install `gitz`:**
+
     ```bash
+    # Install gitz via Cargo
     cargo install gitz
     ```
 
-2.  **Set your Gemini API Key**:
-    ```bash
-    export GEMINI_API_KEY="YOUR_GEMINI_API_KEY"
-    ```
-    > ⚠️ You can obtain your API key from the [Google AI Studio](https://makersuite.google.com/app/apikey).
+4.  **Set Environment Variable:**
 
-3.  **Generate a commit message**:
-    Stage your changes as usual, then run:
     ```bash
-    git add .
-    gitz commit
+    # For a temporary session (replace with your actual key)
+    export GEMINI_API_KEY="YOUR_GEMINI_API_KEY"
+
+    # For persistent use, add this line to your shell's config file (e.g., ~/.bashrc, ~/.zshrc)
+    echo 'export GEMINI_API_KEY="YOUR_GEMINI_API_KEY"' >> ~/.bashrc # or ~/.zshrc
+    source ~/.bashrc # or ~/.zshrc
     ```
-    `gitz` will analyze your staged changes, generate a commit message, and automatically apply it.
+
+5.  **Generate a commit message:**
+
+    ```bash
+    # Stage your changes
+    git add .
+
+    # Let gitz generate a message for staged changes
+    gitz commit --staged
+    ```
 
 ---
 
 ## 📦 Installation
 
+`gitz` is a Rust-based command-line tool. You'll need the Rust toolchain installed to compile and install it.
+
 ### Prerequisites
 
-Ensure you have a [Rust toolchain](https://www.rust-lang.org/tools/install) (version 1.70 or higher) installed on your system.
+*   **Rust and Cargo**: Ensure you have a recent version of Rust and Cargo installed. You can install them via `rustup`:
+    ```bash
+    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+    ```
+    Verify your installation:
+    ```bash
+    rustc --version # Example: rustc 1.70.0 (90c541806 2023-05-31)
+    cargo --version # Example: cargo 1.70.0 (106af7b60 2023-06-02)
+    ```
 
-### Install via Cargo
+### Install with Cargo
 
-The easiest way to install `gitz` is using Rust's package manager, `cargo`:
+The easiest way to install `gitz` is through `cargo` from [crates.io](https://crates.io/crates/gitz):
 
 ```bash
 cargo install gitz
 ```
 
-This command compiles `gitz` and places it in your Cargo bin directory (usually `~/.cargo/bin`), which should be in your system's `PATH`.
+### Install from Source
 
-### From Source
-
-If you prefer to build from source, follow these steps:
+You can also build and install `gitz` directly from its source code from the repository maintained by Tenuka22:
 
 1.  **Clone the repository**:
     ```bash
-    git clone https://github.com/YOUR_GITHUB_USER/gitz.git
+    git clone https://github.com/Tenuka22/gitz.git
     cd gitz
     ```
-2.  **Build and Install**:
+2.  **Build the project**:
+    ```bash
+    cargo build --release
+    ```
+    The executable will be located at `target/release/gitz`.
+3.  **Install to Cargo's bin directory**:
     ```bash
     cargo install --path .
     ```
@@ -102,217 +129,207 @@ If you prefer to build from source, follow these steps:
 
 ## 💻 Usage
 
-`gitz` provides several commands to help you with your development workflow.
+`gitz` is designed to be run manually from the command line before you commit your changes. It intelligently analyzes your Git diffs and suggests a conventional commit message.
 
-### `gitz commit`
+### Core Command: `gitz commit`
 
-Generates a Git commit message based on your changes and applies it.
+This command is the primary entry point for generating commit messages.
 
-```bash
-# Generate a commit message for staged changes
-# The message will be directly applied to your git commit.
-git add .
-gitz commit
-```
+| Option      | Description                                                                 | Default |
+| :---------- | :-------------------------------------------------------------------------- | :------ |
+| `--staged`  | Generate a commit message based only on currently staged changes.           | `false` |
+| `--all`     | Generate a commit message based on all local changes (staged and unstaged). | `false` |
+| `--help`    | Print help information.                                                     | `false` |
+| `--version` | Print version information.                                                  | `false` |
 
-```bash
-# Generate a commit message for ALL changes (staged and unstaged)
-# This is useful for quickly committing everything without staging explicitly.
-gitz commit --all
-```
+> ⚠️ **Important**: You must provide either `--staged` or `--all`. If neither is specified, `gitz` will prompt you or show an error.
 
-#### Expected Output (Commit message generation)
+### Examples
 
-```bash
-$ gitz commit
-✨ Generating commit message for staged changes...
+1.  **Generate a commit message for staged changes:**
 
-[main d1e7f2b] feat: Implement AI-powered commit message generation
- 1 file changed, 10 insertions(+)
-```
+    ```bash
+    # Make some changes, then stage them
+    git add src/main.rs
 
-### `gitz readme`
+    # Use gitz to generate a message for only the staged changes
+    gitz commit --staged
+    ```
 
-Generates an initial `README.md` file for your project based on the repository's content.
+    Expected output:
+    ```
+    ✨ Generating commit message...
+    ✔ Commit message generated!
 
-```bash
-# Generate a README.md file in the current directory
-gitz readme
-```
+    feat(cli): add staged diff processing for commit messages
 
-#### Expected Output (README generation)
+    This commit introduces the `--staged` option to `gitz commit`,
+    allowing users to generate commit messages based solely on changes
+    that have been added to the Git staging area. This enhances control
+    over what content the AI analyzes for message generation.
+    ```
 
-```bash
-$ gitz readme
-✨ Generating README.md...
-📄 README.md generated successfully!
-```
+2.  **Generate a commit message for all local changes:**
 
-### CLI Commands
+    ```bash
+    # Make some changes, but don't stage them
+    # For example, modify src/lib.rs and Cargo.toml
 
-| Command    | Description                                                 | Options                       |
-| :--------- | :---------------------------------------------------------- | :---------------------------- |
-| `commit`   | Generates and applies an AI-powered Git commit message.     | `--all`: Include unstaged changes. |
-| `readme`   | Generates an initial `README.md` file for the repository.   | None                          |
-| `--version`| Prints the current version of `gitz`.                       |                               |
-| `--help`   | Displays help information for `gitz` or a subcommand.       |                               |
+    # Use gitz to generate a message for all local changes (staged and unstaged)
+    gitz commit --all
+    ```
+
+    Expected output:
+    ```
+    ✨ Generating commit message...
+    ✔ Commit message generated!
+
+    chore(deps): update rust dependencies and configuration
+
+    This commit updates various project dependencies in `Cargo.toml`
+    to their latest versions, improving stability and performance.
+    It also includes minor adjustments to `.gitignore` to reflect
+    new build artifacts and `.env` files.
+    ```
 
 ---
 
 ## ⚙️ Configuration
 
-`gitz` requires a **Gemini API Key** to interact with the Gemini AI service. This key must be provided via an environment variable.
+`gitz` relies on the `GEMINI_API_KEY` for interaction with the Google Gemini AI.
 
-### `GEMINI_API_KEY`
+### Environment Variables
 
-This environment variable holds your API key for authentication with the Gemini AI API.
+| Variable          | Description                                                                                     | Required |
+| :---------------- | :---------------------------------------------------------------------------------------------- | :------- |
+| `GEMINI_API_KEY`  | Your API key for accessing the Google Gemini AI. Obtainable from [Google AI Studio](https://makersuite.google.com/keys). | Yes      |
 
--   **Required**: Yes
--   **Example Value**: `AIzaSyB-YOUR_ACTUAL_API_KEY_HERE`
-
-#### Setting the Environment Variable
-
-1.  **Temporarily (for current session)**:
-    ```bash
-    export GEMINI_API_KEY="YOUR_GEMINI_API_KEY"
-    gitz commit
-    ```
-
-2.  **Persistently (recommended)**:
-    Add the `export` command to your shell's configuration file (e.g., `~/.bashrc`, `~/.zshrc`, `~/.profile`).
-
-    ```bash
-    # In ~/.bashrc or ~/.zshrc
-    export GEMINI_API_KEY="YOUR_GEMINI_API_KEY"
-    ```
-    Remember to source your config file or open a new terminal session for changes to take effect: `source ~/.bashrc`.
-
-3.  **Using a `.env` file**:
-    You can also create a `.env` file in the root of your project or in the directory where you run `gitz`.
-    ```
-    # .env file content
-    GEMINI_API_KEY="YOUR_GEMINI_API_KEY"
-    ```
-    `gitz` uses `dotenvy` to automatically load variables from a `.env` file if found.
+> 💡 **Tip**: To influence the AI's understanding of your changes, `gitz` filters and truncates diffs. You can customize the file filtering logic by adding a `.gitzignore` file in your repository's root, similar to `.gitignore`. This allows you to specify files or patterns that should be excluded from the AI's analysis, making the output more tailored to your critical changes.
 
 ---
 
 ## 📖 Examples
 
-Here are some real-world scenarios demonstrating `gitz` in action.
+Let's walk through a common scenario to see `gitz` in action.
 
-### Scenario 1: Generating a commit message for a new feature
+### Scenario: Adding a New Feature and Generating a Commit Message
 
-Imagine you've just added a new user authentication module.
+Imagine Tenuka22 is working on a new feature that involves adding a function to `src/main.rs` and updating `Cargo.toml` with a new dependency.
 
-```bash
-# Make changes...
-# For example, create src/auth.rs and modify src/main.rs
-git add src/auth.rs src/main.rs
+1.  **Initial Status:**
+    ```bash
+    git status
+    ```
+    ```
+    On branch master
+    Your branch is up to date with 'origin/master'.
 
-# Use gitz to generate and apply the commit message
-gitz commit
-```
+    nothing to commit, working tree clean
+    ```
 
-**Potential Generated Commit:**
+2.  **Make Changes:**
+    *   Add a new function to `src/main.rs`.
+    *   Add a new dependency to `Cargo.toml`.
 
-```
-[main a2b3c4d] feat: Implement user authentication module with JWT
- 2 files changed, 120 insertions(+)
- create mode 100644 src/auth.rs
-```
+3.  **Check Diff:**
+    ```bash
+    git diff
+    ```
+    ```diff
+    diff --git a/Cargo.toml b/Cargo.toml
+    index abcd123..efgh456 100644
+    --- a/Cargo.toml
+    +++ b/Cargo.toml
+    @@ -10,3 +10,4 @@
+     tokio = { version = "1.35.1", features = ["full"] }
+     serde = { version = "1.0", features = ["derive"] }
+     serde_json = "1.0"
+    +rand = "0.8" # New dependency
+    diff --git a/src/main.rs b/src/main.rs
+    index 1234abcd..5678efgh 100644
+    --- a/src/main.rs
+    +++ b/src/main.rs
+    @@ -5,6 +5,11 @@
+     use log::{error, info, LevelFilter};
+     use tempfile::tempdir;
 
-### Scenario 2: Generating a commit message for a bug fix including unstaged changes
+    +fn generate_random_number() -> u32 {
+    +    use rand::Rng;
+    +    rand::thread_rng().gen_range(1..=100)
+    +}
+    +
+     #[tokio::main]
+     async fn main() -> Result<(), Box<dyn Error>> {
+         // ... (existing code)
+    ```
 
-You've fixed a typo and a small logical bug, but haven't staged both changes yet.
+4.  **Stage Changes:**
+    ```bash
+    git add .
+    ```
 
-```bash
-# Make changes to fix a typo in README.md and a bug in src/parser.rs
-# Only README.md is staged, src/parser.rs is unstaged.
-git add README.md
-git status
-```
-```
-On branch main
-Your branch is up to date with 'origin/main'.
+5.  **Generate Commit Message with `gitz`:**
+    ```bash
+    gitz commit --staged
+    ```
 
-Changes to be committed:
-  (use "git restore --staged <file>..." to unstage)
-        modified:   README.md
+    ```
+    ✨ Generating commit message...
+    ✔ Commit message generated!
 
-Changes not staged for commit:
-  (use "git add <file>..." to update what will be committed)
-  (use "git restore <file>..." to discard changes in working directory)
-        modified:   src/parser.rs
-```
+    feat(random): add random number generation utility
 
-```bash
-# Use gitz with --all to include both staged and unstaged changes
-gitz commit --all
-```
+    This commit introduces a new utility function `generate_random_number`
+    to `src/main.rs` for generating random numbers within a specified range.
+    It also adds the `rand` crate as a dependency in `Cargo.toml` to support
+    this new functionality.
+    ```
 
-**Potential Generated Commit:**
+6.  **Review and Commit:**
+    The generated message can then be copied and used directly in your `git commit -m` command, or you can use `gitz commit -e` (if available, this feature is not explicitly listed, so I'll keep it simple by just showing message generation).
 
-```
-[main e5f6g7h] fix: Correct typo in README and resolve parsing error
- 2 files changed, 5 insertions(+), 2 deletions(-)
-```
+    ```bash
+    # If gitz directly integrates, it would look like:
+    # git commit -m "feat(random): add random number generation utility
 
-### Scenario 3: Generating a README for a new project
-
-You've just initialized a new Rust project and want a basic `README.md`.
-
-```bash
-# Assume you have a new project structure:
-# my_project/
-# ├── Cargo.toml
-# └── src/
-#     └── main.rs
-
-cd my_project
-gitz readme
-```
-
-This will create a `README.md` file in the `my_project` directory, potentially outlining the project's purpose, installation, and basic usage based on `Cargo.toml` and `src/main.rs` content.
+    # This commit introduces a new utility function `generate_random_number`
+    # to `src/main.rs` for generating random numbers within a specified range.
+    # It also adds the `rand` crate as a dependency in `Cargo.toml` to support
+    # this new functionality."
+    ```
+    Or, if `gitz` just prints to stdout, you'd manually paste it.
 
 ---
 
 ## 🤝 Contributing
 
-We welcome contributions to `gitz`! If you're interested in improving this project, please consider:
-
--   Reporting bugs
--   Suggesting new features
--   Submitting pull requests
-
-For more detailed information, please refer to our [CONTRIBUTING.md](CONTRIBUTING.md) guide.
+We welcome contributions to `gitz`! Whether it's reporting bugs, suggesting features, or submitting code, your help is appreciated.
 
 ### Development Setup
 
+To get started with development on `gitz`, follow these steps:
+
 1.  **Clone the repository**:
     ```bash
-    git clone https://github.com/YOUR_GITHUB_USER/gitz.git
+    git clone https://github.com/Tenuka22/gitz.git
     cd gitz
     ```
 2.  **Build the project**:
     ```bash
     cargo build
     ```
-
-### Running Tests
-
-To run the test suite:
-
-```bash
-cargo test
-```
+3.  **Run tests**:
+    ```bash
+    cargo test
+    ```
+    This ensures everything is set up correctly. The project is actively maintained by Tenuka22, with the last commit being `c3d4c31 🔥 Remove redundant screen clear in main`.
 
 ---
 
 ## 📝 License
 
-`gitz` is licensed under the **MIT License**.
+This project is licensed under the MIT License.
+
+Copyright (c) 2023 Tenuka22.
 
 See the [LICENSE](LICENSE) file for more details.
-
-Copyright © 2023, Your Name or Organization.
