@@ -11,7 +11,7 @@ use std::env;
 
 pub async fn handle_commit_message(
     commit_scope: Option<models::cli::CommitVarient>,
-) -> Result<(), APIError> {
+) -> Result<String, APIError> {
     ui::Logger::dim(&format!(
         "Starting execution of creating a {} commit",
         commit_scope
@@ -81,7 +81,8 @@ pub async fn handle_commit_message(
 
     loader.finish("Commti message done");
     println!();
-    ui::Logger::command(&response.text());
+    let message = response.text();
+    ui::Logger::command(&message);
 
-    Ok(())
+    Ok(message)
 }
