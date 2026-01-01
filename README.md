@@ -8,7 +8,7 @@
 [![Language](https://img.shields.io/badge/rust-1.70+-orange?style=flat-square)](https://www.rust-lang.org/)
 
 ```
-$ gitz-cli commit --staged
+$ gitz-cli commit stage
 ✨ Generating commit message...
 ✔ Commit message generated!
 
@@ -77,7 +77,7 @@ Get `gitz-cli` up and running in under 30 seconds!
     git add .
 
     # Let gitz generate a message for staged changes
-    gitz-cli commit --staged
+    gitz-cli commit stage
     ```
 
 ---
@@ -137,12 +137,12 @@ This command is the primary entry point for generating commit messages.
 
 | Option      | Description                                                                 | Default |
 | :---------- | :-------------------------------------------------------------------------- | :------ |
-| `--staged`  | Generate a commit message based only on currently staged changes.           | `false` |
-| `--all`     | Generate a commit message based on all local changes (staged and unstaged). | `false` |
+| `stage`  | Generate a commit message based only on currently staged changes.           | `false` |
+| `any`     | Generate a commit message based on all local changes (staged and unstaged). | `false` |
 | `--help`    | Print help information.                                                     | `false` |
 | `--version` | Print version information.                                                  | `false` |
 
-> ⚠️ **Important**: You must provide either `--staged` or `--all`. If neither is specified, `gitz-cli` will prompt you or show an error.
+> ⚠️ **Important**: You must provide either `stage` or `any`. If neither is specified, `gitz-cli` will prompt you or show an error.
 
 ### Examples
 
@@ -153,7 +153,7 @@ This command is the primary entry point for generating commit messages.
     git add src/main.rs
 
     # Use gitz to generate a message for only the staged changes
-    gitz-cli commit --staged
+    gitz-cli commit stage
     ```
 
     Expected output:
@@ -163,7 +163,7 @@ This command is the primary entry point for generating commit messages.
 
     feat(cli): add staged diff processing for commit messages
 
-    This commit introduces the `--staged` option to `gitz-cli commit`,
+    This commit introduces the `stage` option to `gitz-cli commit`,
     allowing users to generate commit messages based solely on changes
     that have been added to the Git staging area. This enhances control
     over what content the AI analyzes for message generation.
@@ -176,7 +176,7 @@ This command is the primary entry point for generating commit messages.
     # For example, modify src/lib.rs and Cargo.toml
 
     # Use gitz to generate a message for all local changes (staged and unstaged)
-    gitz-cli commit --all
+    gitz-cli commit any
     ```
 
     Expected output:
@@ -270,7 +270,7 @@ Imagine Tenuka22 is working on a new feature that involves adding a function to 
 
 5.  **Generate Commit Message with `gitz-cli`:**
     ```bash
-    gitz-cli commit --staged
+    gitz-cli commit stage
     ```
 
     ```

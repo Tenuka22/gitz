@@ -23,7 +23,7 @@ pub fn get_git_diff(commit_scope: Option<models::cli::CommitVarient>) -> Result<
 
     match scope {
         models::cli::CommitVarient::Staged => {
-            command.push("--staged");
+            command.push("stage");
         }
         models::cli::CommitVarient::Any => {
             command.push("HEAD");
