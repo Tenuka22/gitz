@@ -13,9 +13,11 @@ github-actions = { repository = "Tenuka22/gitz", workflow = "Rust" }
 [dependencies]
 clap = { version = "4.5.53", features = ["derive"] }
 gemini-rust = "1.5.1"
+reqwest = { version = "0.12", features = ["json"] }
+async-trait = "0.1"
 colored = "2.1"
 log = "0.4.29"
-serde = "1.0.228"
+serde = { version = "1.0.228", features = ["derive"] }
 serde_json = "1.0.148"
 tempfile = "3.24.0"
 tokio = { version = "1", features = ["full"] }
