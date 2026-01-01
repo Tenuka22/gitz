@@ -33,8 +33,8 @@ jobs:
       matrix:
         include:
           - os: ubuntu-latest
-            target: x86_64-unknown-linux-musl
-            asset_name: gitz-cli-x86_64-linux-musl
+            target: x86_64-unknown-linux-gnu
+            asset_name: gitz-cli-x86_64-linux-gnu
             is_linux: true
           - os: windows-latest
             target: x86_64-pc-windows-msvc
@@ -54,9 +54,7 @@ jobs:
         id: sha
         run: echo "sha=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
 
-      - name: Install dependencies for musl build
-        if: matrix.is_linux
-        run: sudo apt-get update && sudo apt-get install -y musl-tools
+
 
       - name: Build release binary
         run: |
