@@ -8,18 +8,25 @@ use crate::{
     models::{error::APIError, readme::ReadmeAnalysis, ui},
 };
 use filter::filter_and_process_readme_files;
-use gemini_rust::{Gemini, Model};
+use gemini_rust::{Gemini, GenerationResponse, Model};
 use std::{env, fs};
+use tokio_retry::{Retry, strategy::FixedInterval};
 
 const README_ANALYSIS_PROMPT: &str = r#"
 You are a GitHub README analyzer. Extract concrete technical facts and ask ONLY essential questions where information cannot be inferred.
 
 EXTRACTION PRIORITY:
 1. Project name: From Cargo.toml, package.json, setup.py, or repo name
-2. Tech stack: Dependencies, imports, file extensions
-3. Project type: Infer from structure (main.rs=CLI, lib.rs=library, server files=API, package manager=library)
-4. Core functionality: Analyze main modules, exported functions, CLI commands
-5. Architecture patterns: Observe file structure and code organization
+2. Version: From Cargo.toml, package.json, or package-lock.json
+3. License: From LICENSE file, Cargo.toml, or package.json
+4. Public API (for libraries): Key exported functions, modules, and data structures.
+5. Security & Authentication: Identify auth libraries (JWT, OAuth), middleware, and security-related configurations.
+6. CLI Commands / API Endpoints: Detect from CLI argument parsing or web route definitions.
+7. Dependencies: From Cargo.toml, package.json, requirements.txt, or build.gradle
+8. Tech stack: Dependencies, imports, file extensions
+9. Project type: Infer from structure (main.rs=CLI, lib.rs=library, server files=API, package manager=library)
+10. Core functionality: Analyze main modules, exported functions, CLI commands
+11. Architecture patterns: Observe file structure and code organization
 
 INTELLIGENT QUESTION RULES:
 - Ask ONLY when critical information cannot be determined from code
@@ -42,8 +49,16 @@ OUTPUT FORMAT (STRICT JSON):
     "project_name": "name from manifest",
     "project_type": "library|cli|web-app|api|mobile|game|other",
     "tech_stack": ["rust", "tokio", "serde"],
+    "dependencies": ["dependency1", "dependency2"],
     "main_functionality": ["brief description of what code does"],
-    "inferred_features": ["features visible in code"]
+    "inferred_features": ["features visible in code"],
+    "cli_commands": ["command_name: brief description"],
+    "api_endpoints": ["/api/v1/resource: description"],
+    "public_api": ["function_name(arg: Type) -> ReturnType"],
+    "security_analysis": ["Description of security measures, e.g., 'Uses JWT for API authentication', 'Input validation on all public endpoints'"],
+    "authentication_methods": ["JWT-based", "OAuth 2.0 provider", "Session cookies"],
+    "license": "MIT",
+    "version": "0.1.0"
   },
   "questions": [
     {
@@ -211,15 +226,26 @@ pub async fn handle_readme() -> Result<(), APIError> {
     let client = Gemini::with_model(api_key, Model::Gemini25Flash)
         .map_err(|e| APIError::new("Gemini", e))?;
 
+    let attempts = 3; // TODO: Add custom attempts
+
     ui::Logger::step("Analyzing repository structure...");
-    let analysis_response = client
-        .generate_content()
-        .with_system_instruction(README_ANALYSIS_PROMPT)
-        .with_user_message(&file_contents)
-        .with_user_message("Analyze this codebase. Extract as much info as possible to make the most comprehensive analysis, then ask ONLY essential questions about information you cannot infer from the code.")
-        .execute()
-        .await
-        .map_err(|e| APIError::new("Gemini", e))?;
+    let analysis_response = Retry::spawn(
+        FixedInterval::from_millis(100).take(attempts),
+        || async {
+            let response = client
+                .generate_content()
+                .with_system_instruction(README_ANALYSIS_PROMPT)
+                .with_user_message(&file_contents)
+                .with_user_message("Analyze this codebase. Extract as much info as possible to make the most comprehensive analysis, then ask ONLY essential questions about information you cannot infer from the code.")
+                .execute()
+                .await
+                .map_err(|e| APIError::new("Gemini", e))?;
+
+            Ok::<GenerationResponse, APIError>(response)
+        },
+    )
+    .await
+    .map_err(|e| APIError::new("Gemini Readme Analysis", e))?;
 
     let analysis_text = analysis_response.text();
     let json_str = json::handle_json_strip(&analysis_text);
@@ -309,13 +335,19 @@ Generate a complete, production-ready README.md using the above context. Use ext
         answers.join("\n\n")
     );
 
-    let readme_response = client
-        .generate_content()
-        .with_system_instruction(README_GENERATION_PROMPT)
-        .with_user_message(&context_message)
-        .execute()
-        .await
-        .map_err(|e| APIError::new("Gemini", e))?;
+    let readme_response = Retry::spawn(FixedInterval::from_millis(100).take(attempts), || async {
+        let response = client
+            .generate_content()
+            .with_system_instruction(README_GENERATION_PROMPT)
+            .with_user_message(&context_message)
+            .execute()
+            .await
+            .map_err(|e| APIError::new("Gemini", e))?;
+
+        Ok::<GenerationResponse, APIError>(response)
+    })
+    .await
+    .map_err(|e| APIError::new("Gemini Readme Generation", e))?;
 
     let file_path = "README.md";
 

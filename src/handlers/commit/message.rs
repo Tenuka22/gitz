@@ -6,8 +6,9 @@ use crate::{
         ui::{self, InfiniteLoader},
     },
 };
-use gemini_rust::{Gemini, Model};
+use gemini_rust::{Gemini, GenerationResponse, Model};
 use std::env;
+use tokio_retry::{Retry, strategy::FixedInterval};
 
 pub async fn handle_commit_message(
     commit_scope: Option<models::cli::CommitVarient>,
@@ -89,24 +90,35 @@ pub async fn handle_commit_message(
         Be specific about WHAT changed, not just HOW."
     };
 
-    let response = client
-        .generate_content()
-        .with_system_prompt(system_prompt)
-        .with_user_message(format!(
-            "Generate a commit message for this git diff, which is preceded by an index of changed files:\n\n```\n{}\n```\n\n\
-            Output only the commit message without extra commentary.",
-            filtered_contents
-        ))
-        .execute()
-        .await
-        .map_err(|e| APIError::new("Gemini", e))?;
+    let attempts = 3; // TODO: Add custom attempts
+
+    let result = Retry::spawn(
+        FixedInterval::from_millis(100).take(attempts),
+        || async {
+            let response = client
+                .generate_content()
+                .with_system_prompt(system_prompt)
+                .with_user_message(format!(
+                    "Generate a commit message for this git diff, which is preceded by an index of changed files:\n\n```\n{}\n```\n\n\
+                    Output only the commit message without extra commentary.",
+                    filtered_contents
+                ))
+                .execute()
+                .await
+                .map_err(|e| APIError::new("Gemini commit message generation", e))?;
+
+            Ok::<GenerationResponse, APIError>(response)
+        },
+    )
+    .await
+    .map_err(|e| APIError::new("Gemini commit message generation", e))?;
 
     loader.set_progress(100.0);
     loader.tick();
 
     loader.finish("Commti message done");
     println!();
-    let message = response.text();
+    let message = result.text();
     ui::Logger::command(&message);
 
     Ok(message)
