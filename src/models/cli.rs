@@ -3,7 +3,7 @@ use std::fmt;
 use clap::{Parser, ValueEnum};
 
 #[derive(Clone, Debug, ValueEnum)]
-pub enum CliVarient {
+pub enum CliVariant {
     #[value(name = "commit")]
     CommitMessage,
     #[value(name = "readme")]
@@ -11,7 +11,7 @@ pub enum CliVarient {
 }
 
 #[derive(Clone, Debug, ValueEnum)]
-pub enum CommitVarient {
+pub enum CommitVariant {
     #[value(name = "stage")]
     Staged,
     #[value(name = "any")]
@@ -27,11 +27,11 @@ pub enum Provider {
     Cerebras,
 }
 
-impl fmt::Display for CommitVarient {
+impl fmt::Display for CommitVariant {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let s = match self {
-            CommitVarient::Staged => "staged",
-            CommitVarient::Any => "any",
+            CommitVariant::Staged => "staged",
+            CommitVariant::Any => "any",
         };
         write!(f, "{s}")
     }
@@ -41,10 +41,10 @@ impl fmt::Display for CommitVarient {
 #[command(version, about)]
 pub struct Cli {
     #[arg(value_enum)]
-    pub varient: CliVarient,
+    pub variant: CliVariant,
 
     #[arg(value_enum)]
-    pub commit_scope: Option<CommitVarient>,
+    pub commit_scope: Option<CommitVariant>,
 
     /// Automatically commit with the generated message
     #[arg(long)]

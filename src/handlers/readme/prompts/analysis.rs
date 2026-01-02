@@ -64,3 +64,5 @@ CRITICAL RULES:
 4. Be intelligent - don't waste user time on obvious things
 5. "extracted.main_functionality" should be concise bullet points of what the code actually does
 "#;
+
+pub const README_ANALYSIS_USER_PROMPT: &str = r#"Analyze this codebase. Extract as much info as possible to make the most comprehensive analysis, then ask ONLY essential questions about information you cannot infer from the code."#;

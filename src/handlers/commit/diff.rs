@@ -3,14 +3,14 @@ use crate::{
     models::{self, error::APIError, ui},
 };
 
-pub fn get_git_diff(commit_scope: Option<models::cli::CommitVarient>) -> Result<String, APIError> {
+pub fn get_git_diff(commit_scope: Option<models::cli::CommitVariant>) -> Result<String, APIError> {
     let mut loader = ui::InfiniteLoader::new("Extracting the git diff");
 
     loader.tick();
 
     let scope = &commit_scope
         .clone()
-        .unwrap_or(models::cli::CommitVarient::Any);
+        .unwrap_or(models::cli::CommitVariant::Any);
     loader.tick();
 
     let mut command = vec![
@@ -22,10 +22,10 @@ pub fn get_git_diff(commit_scope: Option<models::cli::CommitVarient>) -> Result<
     ];
 
     match scope {
-        models::cli::CommitVarient::Staged => {
+        models::cli::CommitVariant::Staged => {
             command.push("--staged");
         }
-        models::cli::CommitVarient::Any => {
+        models::cli::CommitVariant::Any => {
             command.push("HEAD");
         }
     }
@@ -36,7 +36,7 @@ pub fn get_git_diff(commit_scope: Option<models::cli::CommitVarient>) -> Result<
 
         let scope_display = commit_scope
             .as_ref()
-            .map_or(&models::cli::CommitVarient::Any, |v| v);
+            .map_or(&models::cli::CommitVariant::Any, |v| v);
 
         return APIError::new_msg(
             "Git diff extraction",
@@ -50,7 +50,7 @@ pub fn get_git_diff(commit_scope: Option<models::cli::CommitVarient>) -> Result<
     if diff.trim() == "" {
         let scope_display = commit_scope
             .as_ref()
-            .map_or(&models::cli::CommitVarient::Any, |v| v);
+            .map_or(&models::cli::CommitVariant::Any, |v| v);
         
         return Err(APIError::new_msg(
             "Git diff extraction",

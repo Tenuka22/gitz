@@ -12,7 +12,12 @@ use file_filtering::filter_and_process_readme_files;
 use prompts::analysis::README_ANALYSIS_PROMPT;
 use tokio_retry::{strategy::FixedInterval, Retry};
 
-pub async fn analyze_readme_content(provider: Provider) -> Result<(ReadmeAnalysis, String, Vec<String>), APIError> {
+struct RepositoryContext {
+    file_contents: String,
+    git_context: String,
+}
+
+fn gather_repository_context() -> Result<RepositoryContext, APIError> {
     ui::Logger::step("Collecting repository files...");
     let files =
         get_git_files().map_err(|_| APIError::new_msg("README", "Failed to get git files"))?;
@@ -22,6 +27,16 @@ pub async fn analyze_readme_content(provider: Provider) -> Result<(ReadmeAnalysi
     ui::Logger::step("Gathering git metadata...");
     let git_context = collect_git_metadata()?;
 
+    Ok(RepositoryContext {
+        file_contents,
+        git_context,
+    })
+}
+
+async fn perform_ai_analysis(
+    provider: Provider,
+    file_contents: &str,
+) -> Result<ReadmeAnalysis, APIError> {
     let provider_name = match provider {
         Provider::Gemini => "Gemini",
         Provider::Cerebras => "Cerebras",
@@ -37,27 +52,26 @@ pub async fn analyze_readme_content(provider: Provider) -> Result<(ReadmeAnalysi
     let analysis_text = Retry::spawn(
         FixedInterval::from_millis(100).take(attempts),
         || async {
-            let response = ai_provider
+            ai_provider
                 .generate_content(
                     Some(README_ANALYSIS_PROMPT),
                     vec![
                         &file_contents,
-                        "Analyze this codebase. Extract as much info as possible to make the most comprehensive analysis, then ask ONLY essential questions about information you cannot infer from the code.",
+                        prompts::analysis::README_ANALYSIS_USER_PROMPT,
                     ],
                 )
-                .await?;
-            Ok::<String, APIError>(response)
+                .await
         },
     )
     .await
     .map_err(|e| APIError::new("AI provider Readme Analysis", e))?;
+
     let json_str = json::handle_json_strip(&analysis_text);
 
-    let analysis: ReadmeAnalysis =
-        serde_json::from_str(&json_str).map_err(|e| APIError::new("Invalid analysis JSON", e))?;
+    serde_json::from_str(&json_str).map_err(|e| APIError::new("Invalid analysis JSON", e))
+}
 
-    ui::Logger::success("Analysis complete!");
-
+fn collect_user_feedback(analysis: &ReadmeAnalysis) -> Vec<String> {
     ui::Logger::header("README CONFIGURATION");
 
     let mut answers = Vec::new();
@@ -79,5 +93,16 @@ A: {}",
 
         println!();
     }
-    Ok((analysis, git_context, answers))
+    answers
+}
+
+pub async fn analyze_readme_content(provider: Provider) -> Result<(ReadmeAnalysis, String, Vec<String>), APIError> {
+    let context = gather_repository_context()?;
+    let analysis = perform_ai_analysis(provider, &context.file_contents).await?;
+    
+    ui::Logger::success("Analysis complete!");
+
+    let answers = collect_user_feedback(&analysis);
+
+    Ok((analysis, context.git_context, answers))
 }

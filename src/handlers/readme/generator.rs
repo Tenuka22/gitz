@@ -6,15 +6,12 @@ use prompts::generation::README_GENERATION_PROMPT;
 use std::fs;
 use tokio_retry::{strategy::FixedInterval, Retry};
 
-pub async fn generate_final_readme(
-    provider: Provider,
-    analysis: ReadmeAnalysis,
-    git_context: String,
-    answers: Vec<String>,
-) -> Result<(), APIError> {
-    ui::Logger::step("Generating README with your selections...");
-
-    let context_message = format!(
+fn build_generation_prompt(
+    analysis: &ReadmeAnalysis,
+    git_context: &str,
+    answers: &[String],
+) -> String {
+    format!(
         r##"# EXTRACTED PROJECT DATA (use as-is, do not repeat):
 
 **Project**: {}
@@ -69,19 +66,29 @@ Generate a complete, production-ready README.md using the above context. Use ext
             .unwrap_or_else(|| "None".to_string()),
         git_context,
         answers.join("\n\n")
-    );
+    )
+}
+
+pub async fn generate_final_readme(
+    provider: Provider,
+    analysis: ReadmeAnalysis,
+    git_context: String,
+    answers: Vec<String>,
+) -> Result<(), APIError> {
+    ui::Logger::step("Generating README with your selections...");
+
+    let context_message = build_generation_prompt(&analysis, &git_context, &answers);
 
     let ai_provider = ai::create_provider(provider)?;
     let attempts = 3; // TODO: Add custom attempts
 
     let readme_content = Retry::spawn(FixedInterval::from_millis(100).take(attempts), || async {
-        let response = ai_provider
+        ai_provider
             .generate_content(
                 Some(README_GENERATION_PROMPT),
                 vec![&context_message],
             )
-            .await?;
-        Ok::<String, APIError>(response)
+            .await
     })
     .await
     .map_err(|e| APIError::new("AI provider Readme Generation", e))?;
