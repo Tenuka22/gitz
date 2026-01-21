@@ -1,10 +1,15 @@
 use crate::{
     handlers::{ai, readme::prompts},
-    models::{cli::Provider, error::APIError, readme::ReadmeAnalysis, ui},
+    models::{
+        cli::{CliModel, Provider},
+        error::APIError,
+        readme::ReadmeAnalysis,
+        ui,
+    },
 };
 use prompts::generation::README_GENERATION_PROMPT;
 use std::fs;
-use tokio_retry::{strategy::FixedInterval, Retry};
+use tokio_retry::{Retry, strategy::FixedInterval};
 
 fn build_generation_prompt(
     analysis: &ReadmeAnalysis,
@@ -71,6 +76,7 @@ Generate a complete, production-ready README.md using the above context. Use ext
 
 pub async fn generate_final_readme(
     provider: Provider,
+    model: Option<CliModel>,
     analysis: ReadmeAnalysis,
     git_context: String,
     answers: Vec<String>,
@@ -79,15 +85,12 @@ pub async fn generate_final_readme(
 
     let context_message = build_generation_prompt(&analysis, &git_context, &answers);
 
-    let ai_provider = ai::create_provider(provider)?;
+    let ai_provider = ai::create_provider(provider, model)?;
     let attempts = 3; // TODO: Add custom attempts
 
     let readme_content = Retry::spawn(FixedInterval::from_millis(100).take(attempts), || async {
         ai_provider
-            .generate_content(
-                Some(README_GENERATION_PROMPT),
-                vec![&context_message],
-            )
+            .generate_content(Some(README_GENERATION_PROMPT), vec![&context_message])
             .await
     })
     .await

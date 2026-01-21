@@ -1,5 +1,5 @@
 use super::AIProvider;
-use crate::models::error::APIError;
+use crate::models::{cli::CliModel, error::APIError};
 use gemini_rust::{Gemini, Model};
 
 pub struct GeminiProvider {
@@ -7,9 +7,23 @@ pub struct GeminiProvider {
 }
 
 impl GeminiProvider {
-    pub fn new(api_key: String) -> Result<Self, APIError> {
-        let client = Gemini::with_model(&api_key, Model::Gemini25Flash)
-            .map_err(|e| APIError::new("Gemini", e))?;
+    pub fn new(api_key: String, model: Option<CliModel>) -> Result<Self, APIError> {
+        let gemini_model = match model {
+            None | Some(CliModel::Gemini25Flash) => Model::Gemini25Flash,
+            Some(CliModel::Gemini25Pro) => Model::Gemini25Pro,
+            Some(CliModel::Gemini25FlashLite) => Model::Gemini25FlashLite,
+
+            Some(other) => {
+                return Err(APIError::new_msg(
+                    "Gemini",
+                    &format!("Model {:?} is not supported by Gemini", other),
+                ));
+            }
+        };
+
+        let client =
+            Gemini::with_model(&api_key, gemini_model).map_err(|e| APIError::new("Gemini", e))?;
+
         Ok(Self { client })
     }
 }

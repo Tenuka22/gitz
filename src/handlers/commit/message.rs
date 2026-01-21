@@ -1,7 +1,11 @@
 use crate::{
-    handlers::{self, commit::filter, ai, commit::prompts},
+    handlers::{
+        self, ai,
+        commit::{filter, prompts},
+    },
     models::{
         self,
+        cli::CliModel,
         error::APIError,
         ui::{self, InfiniteLoader},
     },
@@ -26,14 +30,26 @@ fn clean_commit_message(message: &str) -> String {
             // Find the first line that looks like a commit message (starts with type or emoji)
             if let Some(first_commit_line) = cleaned_message.lines().find(|line| {
                 let trimmed = line.trim();
-                trimmed.starts_with("fix(") || trimmed.starts_with("feat(") ||
-                trimmed.starts_with("✨") || trimmed.starts_with("🐛") ||
-                trimmed.starts_with("refactor(") || trimmed.starts_with("docs(") ||
-                trimmed.starts_with("chore(") || trimmed.starts_with("test(") ||
-                trimmed.starts_with("perf(") || trimmed.starts_with("style(") ||
-                trimmed.starts_with("build(") || trimmed.starts_with("ci(")
+                trimmed.starts_with("fix(")
+                    || trimmed.starts_with("feat(")
+                    || trimmed.starts_with("✨")
+                    || trimmed.starts_with("🐛")
+                    || trimmed.starts_with("refactor(")
+                    || trimmed.starts_with("docs(")
+                    || trimmed.starts_with("chore(")
+                    || trimmed.starts_with("test(")
+                    || trimmed.starts_with("perf(")
+                    || trimmed.starts_with("style(")
+                    || trimmed.starts_with("build(")
+                    || trimmed.starts_with("ci(")
             }) {
-                cleaned_message = first_commit_line.to_string() + "\n" + &cleaned_message.lines().skip(1).collect::<Vec<_>>().join("\n");
+                cleaned_message = first_commit_line.to_string()
+                    + "\n"
+                    + &cleaned_message
+                        .lines()
+                        .skip(1)
+                        .collect::<Vec<_>>()
+                        .join("\n");
                 cleaned_message = cleaned_message.trim().to_string();
             }
         }
@@ -57,6 +73,7 @@ pub async fn handle_commit_message(
     commit_scope: Option<models::cli::CommitVariant>,
     no_emoji: bool,
     provider: models::cli::Provider,
+    model: Option<CliModel>,
 ) -> Result<String, APIError> {
     ui::Logger::dim(&format!(
         "Starting execution of creating a {} commit",
@@ -75,7 +92,7 @@ pub async fn handle_commit_message(
     loader.tick();
     loader.tick();
 
-    let ai_provider = ai::create_provider(provider)?;
+    let ai_provider = ai::create_provider(provider, model)?;
 
     loader.set_progress(45.0);
     loader.tick();
@@ -88,17 +105,14 @@ pub async fn handle_commit_message(
 
     let attempts = 3; // TODO: Add custom attempts
 
-    let message = Retry::spawn(
-        FixedInterval::from_millis(100).take(attempts),
-        || async {
-            ai_provider
-                .generate_content(
-                    Some(system_prompt),
-                    vec![&prompts::COMMIT_USER_MESSAGE_PROMPT.replace("{}", &filtered_contents)],
-                )
-                .await
-        },
-    )
+    let message = Retry::spawn(FixedInterval::from_millis(100).take(attempts), || async {
+        ai_provider
+            .generate_content(
+                Some(system_prompt),
+                vec![&prompts::COMMIT_USER_MESSAGE_PROMPT.replace("{}", &filtered_contents)],
+            )
+            .await
+    })
     .await
     .map_err(|e| APIError::new("AI provider commit message generation", e))?;
 

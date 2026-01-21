@@ -10,19 +10,22 @@ use dotenvy::dotenv_override;
 async fn run(cli: cli::Cli) -> Result<(), error::APIError> {
     match cli.variant {
         cli::CliVariant::CommitMessage => {
-            let message = crate::handlers::commit::message::handle_commit_message(cli.commit_scope, cli.no_emoji, cli.provider).await?;
-            
+            let message = crate::handlers::commit::message::handle_commit_message(
+                cli.commit_scope,
+                cli.no_emoji,
+                cli.provider,
+                cli.model,
+            )
+            .await?;
+
             if cli.commit {
                 ui::Logger::dim("Executing git commit...");
-                handlers::git::git_cmd(
-                    &["commit", "-m", &message],
-                    "git commit",
-                )?;
+                handlers::git::git_cmd(&["commit", "-m", &message], "git commit")?;
                 ui::Logger::success("Commit created successfully!");
             }
         }
         cli::CliVariant::Readme => {
-            crate::handlers::readme::handle_readme(cli.provider).await?;
+            crate::handlers::readme::handle_readme(cli.provider, cli.model).await?;
         }
     }
     Ok(())

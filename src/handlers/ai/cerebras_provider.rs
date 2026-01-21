@@ -1,5 +1,5 @@
-use crate::models::error::APIError;
 use super::AIProvider;
+use crate::models::{cli::CliModel, error::APIError};
 use serde::{Deserialize, Serialize};
 
 const CEREBRAS_API_URL: &str = "https://api.cerebras.ai/v1/chat/completions";
@@ -8,6 +8,7 @@ const DEFAULT_MODEL: &str = "gpt-oss-120b";
 pub struct CerebrasProvider {
     api_key: String,
     client: reqwest::Client,
+    model: String,
 }
 
 #[derive(Serialize)]
@@ -38,9 +39,28 @@ struct ResponseMessage {
 }
 
 impl CerebrasProvider {
-    pub fn new(api_key: String) -> Result<Self, APIError> {
+    pub fn new(api_key: String, model: Option<CliModel>) -> Result<Self, APIError> {
         let client = reqwest::Client::new();
-        Ok(Self { api_key, client })
+
+        let model = match model {
+            None => "gpt-oss-120b",
+            Some(CliModel::Llama31_70B) => "llama3.1-70b",
+            Some(CliModel::Llama31_8B) => "llama3.1-8b",
+
+            Some(other) => {
+                return Err(APIError::new_msg(
+                    "Cerebras",
+                    &format!("Model {:?} is not supported by Cerebras", other),
+                ));
+            }
+        }
+        .to_string();
+
+        Ok(Self {
+            api_key,
+            client,
+            model,
+        })
     }
 }
 
@@ -69,11 +89,12 @@ impl AIProvider for CerebrasProvider {
         });
 
         let request_body = ChatCompletionRequest {
-            model: DEFAULT_MODEL.to_string(),
+            model: self.model.clone(),
             messages,
         };
 
-        let response = self.client
+        let response = self
+            .client
             .post(CEREBRAS_API_URL)
             .header("Authorization", format!("Bearer {}", self.api_key))
             .header("Content-Type", "application/json")
@@ -91,10 +112,9 @@ impl AIProvider for CerebrasProvider {
             ));
         }
 
-        let completion: ChatCompletionResponse = response
-            .json()
-            .await
-            .map_err(|e| APIError::new_msg("Cerebras", &format!("Failed to parse response: {}", e)))?;
+        let completion: ChatCompletionResponse = response.json().await.map_err(|e| {
+            APIError::new_msg("Cerebras", &format!("Failed to parse response: {}", e))
+        })?;
 
         completion
             .choices

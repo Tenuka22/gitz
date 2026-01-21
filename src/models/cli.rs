@@ -11,6 +11,21 @@ pub enum CliVariant {
 }
 
 #[derive(Clone, Debug, ValueEnum)]
+pub enum CliModel {
+    #[value(name = "gemini-2.5-flash")]
+    Gemini25Flash,
+    #[value(name = "gemini-2.5-pro")]
+    Gemini25Pro,
+    #[value(name = "gemini-2.5-flash-lite")]
+    Gemini25FlashLite,
+
+    #[value(name = "llama3.1-70b")]
+    Llama31_70B,
+    #[value(name = "llama3.1-8b")]
+    Llama31_8B,
+}
+
+#[derive(Clone, Debug, ValueEnum)]
 pub enum CommitVariant {
     #[value(name = "stage")]
     Staged,
@@ -57,4 +72,8 @@ pub struct Cli {
     /// AI provider to use (gemini or cerebras)
     #[arg(long, default_value = "gemini")]
     pub provider: Provider,
+
+    /// AI model to use
+    #[arg(long)]
+    pub model: Option<CliModel>,
 }

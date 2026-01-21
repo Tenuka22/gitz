@@ -3,14 +3,18 @@ use crate::{
         ai,
         git::{collect_git_metadata, get_git_files},
         json,
-        readme::file_filtering,
-        readme::prompts,
+        readme::{file_filtering, prompts},
     },
-    models::{cli::Provider, error::APIError, readme::ReadmeAnalysis, ui},
+    models::{
+        cli::{CliModel, Provider},
+        error::APIError,
+        readme::ReadmeAnalysis,
+        ui,
+    },
 };
 use file_filtering::filter_and_process_readme_files;
 use prompts::analysis::README_ANALYSIS_PROMPT;
-use tokio_retry::{strategy::FixedInterval, Retry};
+use tokio_retry::{Retry, strategy::FixedInterval};
 
 struct RepositoryContext {
     file_contents: String,
@@ -35,6 +39,7 @@ fn gather_repository_context() -> Result<RepositoryContext, APIError> {
 
 async fn perform_ai_analysis(
     provider: Provider,
+    model: Option<CliModel>,
     file_contents: &str,
 ) -> Result<ReadmeAnalysis, APIError> {
     let provider_name = match provider {
@@ -43,26 +48,23 @@ async fn perform_ai_analysis(
     };
     ui::Logger::step(&format!("Initializing {} AI...", provider_name));
 
-    let ai_provider = ai::create_provider(provider)?;
+    let ai_provider = ai::create_provider(provider, model)?;
 
     let attempts = 3; // TODO: Add custom attempts
 
     ui::Logger::step("Analyzing repository structure...");
 
-    let analysis_text = Retry::spawn(
-        FixedInterval::from_millis(100).take(attempts),
-        || async {
-            ai_provider
-                .generate_content(
-                    Some(README_ANALYSIS_PROMPT),
-                    vec![
-                        &file_contents,
-                        prompts::analysis::README_ANALYSIS_USER_PROMPT,
-                    ],
-                )
-                .await
-        },
-    )
+    let analysis_text = Retry::spawn(FixedInterval::from_millis(100).take(attempts), || async {
+        ai_provider
+            .generate_content(
+                Some(README_ANALYSIS_PROMPT),
+                vec![
+                    &file_contents,
+                    prompts::analysis::README_ANALYSIS_USER_PROMPT,
+                ],
+            )
+            .await
+    })
     .await
     .map_err(|e| APIError::new("AI provider Readme Analysis", e))?;
 
@@ -96,10 +98,13 @@ A: {}",
     answers
 }
 
-pub async fn analyze_readme_content(provider: Provider) -> Result<(ReadmeAnalysis, String, Vec<String>), APIError> {
+pub async fn analyze_readme_content(
+    provider: Provider,
+    model: Option<CliModel>,
+) -> Result<(ReadmeAnalysis, String, Vec<String>), APIError> {
     let context = gather_repository_context()?;
-    let analysis = perform_ai_analysis(provider, &context.file_contents).await?;
-    
+    let analysis = perform_ai_analysis(provider, model, &context.file_contents).await?;
+
     ui::Logger::success("Analysis complete!");
 
     let answers = collect_user_feedback(&analysis);
